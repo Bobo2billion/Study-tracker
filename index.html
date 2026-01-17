@@ -4,100 +4,390 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Study Time Tracker</title>
+
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 24px; max-width: 1000px; }
-    h1 { margin: 0 0 12px; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    input, button, select { padding: 10px 12px; font-size: 14px; }
-    button { cursor: pointer; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin-top: 16px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; }
-    th { font-weight: 600; }
-    .muted { color: #666; }
-    .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; border: 1px solid #ddd; font-size: 12px; }
-    .danger { border-color: #f2b8b5; background: #fff5f5; }
-    .ok { border-color: #bfe3c4; background: #f4fff6; }
-    .right { text-align: right; }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .small { font-size: 12px; }
-    .footer { margin-top: 14px; display:flex; gap:10px; flex-wrap: wrap; align-items:center; }
-    .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    :root{
+      --bg:#0b1020;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.09);
+      --border: rgba(255,255,255,.10);
+      --text:#eaf0ff;
+      --muted: rgba(234,240,255,.70);
+      --muted2: rgba(234,240,255,.55);
+      --shadow: 0 18px 55px rgba(0,0,0,.45);
+      --shadow2: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --radius2: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      --focus: 0 0 0 4px rgba(145, 180, 255, .22);
+      --good: rgba(98, 219, 143, .18);
+      --goodBorder: rgba(98, 219, 143, .30);
+      --bad: rgba(255, 123, 123, .14);
+      --badBorder: rgba(255, 123, 123, .26);
+    }
+    [data-theme="light"]{
+      --bg:#f6f7fb;
+      --panel: rgba(0,0,0,.04);
+      --panel2: rgba(0,0,0,.06);
+      --border: rgba(0,0,0,.08);
+      --text:#121a2a;
+      --muted: rgba(18,26,42,.70);
+      --muted2: rgba(18,26,42,.52);
+      --shadow: 0 18px 55px rgba(0,0,0,.10);
+      --shadow2: 0 10px 30px rgba(0,0,0,.10);
+      --focus: 0 0 0 4px rgba(0, 89, 255, .14);
+      --good: rgba(26, 165, 78, .10);
+      --goodBorder: rgba(26, 165, 78, .22);
+      --bad: rgba(220, 66, 66, .08);
+      --badBorder: rgba(220, 66, 66, .18);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(124, 92, 255, .28), transparent 60%),
+        radial-gradient(900px 500px at 90% 20%, rgba(64, 201, 255, .22), transparent 55%),
+        radial-gradient(900px 600px at 40% 110%, rgba(98, 219, 143, .18), transparent 55%),
+        var(--bg);
+    }
+
+    a{ color:inherit; }
+    .container{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 22px 18px 40px;
+    }
+
+    /* Header */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 14px 0 16px;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(0,0,0,.25), transparent);
+    }
+    [data-theme="light"] .topbar{
+      background: linear-gradient(to bottom, rgba(246,247,251,.92), rgba(246,247,251,.65));
+    }
+    .header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 14px;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    h1{
+      margin:0;
+      font-size: 22px;
+      letter-spacing: .2px;
+    }
+    .sub{
+      margin:0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .headerActions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+
+    /* Panels */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 10px;
+    }
+    .card{
+      background: linear-gradient(180deg, var(--panel2), var(--panel));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow2);
+      padding: 16px;
+    }
+
+    /* Inputs / buttons */
+    input, select, button{
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+    }
+    input, select{
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline: none;
+      min-height: 40px;
+    }
+    [data-theme="light"] input,
+    [data-theme="light"] select{
+      background: rgba(255,255,255,.80);
+    }
+    input:focus, select:focus{
+      box-shadow: var(--focus);
+      border-color: rgba(145, 180, 255, .35);
+    }
+
+    .btn{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.07);
+      border-radius: 12px;
+      padding: 10px 12px;
+      min-height: 40px;
+      cursor:pointer;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      user-select: none;
+      white-space: nowrap;
+    }
+    [data-theme="light"] .btn{
+      background: rgba(255,255,255,.95);
+    }
+    .btn:hover{ background: rgba(255,255,255,.10); }
+    [data-theme="light"] .btn:hover{ background: rgba(255,255,255,1); }
+    .btn:active{ transform: translateY(1px); }
+    .btnPrimary{
+      background: rgba(124, 92, 255, .20);
+      border-color: rgba(124, 92, 255, .35);
+    }
+    .btnPrimary:hover{ background: rgba(124, 92, 255, .26); }
+    .btnDanger{
+      background: rgba(255, 123, 123, .14);
+      border-color: rgba(255, 123, 123, .26);
+    }
+    .btnDanger:hover{ background: rgba(255, 123, 123, .18); }
+    .btnGhost{
+      background: transparent;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .spacer{ flex: 1; }
+
+    /* Status strip */
+    .statusStrip{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pill.ok{ background: var(--good); border-color: var(--goodBorder); color: var(--text); }
+    .pill.bad{ background: var(--bad); border-color: var(--badBorder); color: var(--text); }
+    .dot{
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,.55);
+    }
+    .pill.ok .dot{ background: rgba(98, 219, 143, .95); }
+    .pill.bad .dot{ background: rgba(255, 123, 123, .95); }
+
+    .timerBig{
+      font-family: var(--mono);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .6px;
+      font-size: 22px;
+    }
+    .meta{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Tables */
+    .tableWrap{
+      overflow:auto;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      margin-top: 12px;
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 780px;
+      background: rgba(255,255,255,.03);
+    }
+    th, td{
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align:left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    th{
+      position: sticky;
+      top: 0;
+      background: rgba(0,0,0,.22);
+      backdrop-filter: blur(10px);
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .35px;
+      text-transform: uppercase;
+    }
+    [data-theme="light"] th{
+      background: rgba(255,255,255,.75);
+      color: rgba(18,26,42,.62);
+    }
+    .right{ text-align:right; }
+    .mono{ font-family: var(--mono); font-variant-numeric: tabular-nums; }
+    .nameCell{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .badgeActive{
+      font-size: 11px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--goodBorder);
+      background: var(--good);
+    }
+
+    .actions{
+      display:flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .small{ font-size: 12px; color: var(--muted); }
+
+    /* Responsive */
+    @media (min-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
   </style>
 </head>
+
 <body>
-  <h1>Study Time Tracker</h1>
-  <div class="muted">Runs locally. Data is saved in your browser (localStorage).</div>
-
-  <div class="card">
-    <div class="row">
-      <label class="small muted" for="className">Add class:</label>
-      <input id="className" placeholder="e.g., Calculus, Physics, Lit" />
-      <button id="addClassBtn">Add</button>
-
-      <span style="flex:1"></span>
-
-      <button id="exportBtn">Export JSON</button>
-      <button id="importBtn">Import JSON</button>
-      <input id="importFile" type="file" accept="application/json" hidden />
-      <button id="resetBtn" title="Clears all data">Reset All</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="row">
-      <div><span class="pill" id="statusPill">No active timer</span></div>
-      <div class="mono" id="activeTimerText">00:00:00</div>
-      <span class="muted small" id="activeMeta"></span>
-    </div>
-
-    <table aria-label="Class totals">
-      <thead>
-        <tr>
-          <th>Class</th>
-          <th class="right">Today</th>
-          <th class="right">This week</th>
-          <th class="right">All time</th>
-          <th class="right">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="classTableBody"></tbody>
-    </table>
-
-    <div class="footer">
-      <div class="muted small">Week starts Monday.</div>
-      <div class="muted small">Tip: only one timer runs at a time.</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="row" style="justify-content: space-between;">
-      <h2 style="margin:0;">Session history</h2>
-      <div class="row">
-        <label class="small muted" for="filterClass">Filter:</label>
-        <select id="filterClass"></select>
-        <button id="clearHistoryBtn">Clear history</button>
+  <div class="topbar">
+    <div class="container">
+      <div class="header">
+        <div class="title">
+          <h1>Study Time Tracker</h1>
+          <p class="sub">Runs locally in your browser. Use Export for backups.</p>
+        </div>
+        <div class="headerActions">
+          <button class="btn btnGhost" id="themeBtn" title="Toggle light/dark">Theme</button>
+          <button class="btn" id="exportBtn">Export JSON</button>
+          <button class="btn" id="importBtn">Import JSON</button>
+          <input id="importFile" type="file" accept="application/json" hidden />
+          <button class="btn btnDanger" id="resetBtn" title="Clears all data">Reset</button>
+        </div>
       </div>
     </div>
+  </div>
 
-    <table aria-label="History log">
-      <thead>
-        <tr>
-          <th>Class</th>
-          <th>Start</th>
-          <th>End</th>
-          <th class="right">Duration</th>
-          <th class="right">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="historyBody"></tbody>
-    </table>
+  <div class="container">
+    <div class="grid">
+      <div class="card">
+        <div class="row">
+          <input id="className" placeholder="Add a class (e.g., Calc, Physics, Lit)" style="flex:1; min-width: 240px;" />
+          <button class="btn btnPrimary" id="addClassBtn">Add class</button>
+          <div class="spacer"></div>
+          <div class="small">Week starts Monday.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="statusStrip">
+          <div class="row" style="gap:12px;">
+            <span class="pill bad" id="statusPill"><span class="dot"></span><span>No active timer</span></span>
+            <div class="timerBig mono" id="activeTimerText">00:00:00</div>
+          </div>
+          <div class="meta" id="activeMeta"></div>
+        </div>
+
+        <div class="tableWrap" style="margin-top:14px;">
+          <table aria-label="Class totals">
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th class="right">Today</th>
+                <th class="right">This week</th>
+                <th class="right">All time</th>
+                <th class="right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="classTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between; align-items:flex-end;">
+          <div>
+            <h2 style="margin:0; font-size:16px;">Session history</h2>
+            <div class="small">Shows exact start/end timestamps for each session.</div>
+          </div>
+          <div class="row">
+            <label class="small" for="filterClass">Filter</label>
+            <select id="filterClass"></select>
+            <button class="btn" id="clearHistoryBtn">Clear history</button>
+          </div>
+        </div>
+
+        <div class="tableWrap" style="margin-top:14px;">
+          <table aria-label="History log">
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Start</th>
+                <th>End</th>
+                <th class="right">Duration</th>
+                <th class="right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
 <script>
 (() => {
   const STORAGE_KEY = "study_time_tracker_v1";
+  const THEME_KEY = "study_time_tracker_theme";
+
+  // ---------- Theme ----------
+  const applyTheme = (t) => {
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem(THEME_KEY, t);
+  };
+  applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+  document.getElementById("themeBtn").addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "dark";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
 
   // ---------- Utilities ----------
   const pad = (n) => String(n).padStart(2, "0");
@@ -108,27 +398,28 @@
     const sec = s % 60;
     return `${pad(h)}:${pad(m)}:${pad(sec)}`;
   };
-
   const toISO = (d) => new Date(d).toISOString();
   const fromISO = (s) => new Date(s);
-
   const startOfDay = (d = new Date()) => {
     const x = new Date(d);
     x.setHours(0,0,0,0);
     return x;
   };
-
   // Week starts Monday
   const startOfWeek = (d = new Date()) => {
     const x = startOfDay(d);
     const day = x.getDay(); // 0 Sun .. 6 Sat
-    const diff = (day === 0 ? -6 : 1) - day; // shift to Monday
+    const diff = (day === 0 ? -6 : 1) - day;
     x.setDate(x.getDate() + diff);
     return x;
   };
-
   const msBetween = (a, b) => Math.max(0, b.getTime() - a.getTime());
-
+  const overlapMs = (aStart, aEnd, bStart, bEnd) => {
+    const start = Math.max(aStart.getTime(), bStart.getTime());
+    const end = Math.min(aEnd.getTime(), bEnd.getTime());
+    return Math.max(0, end - start);
+  };
+  const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
   const download = (filename, text) => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([text], {type: "application/json"}));
@@ -137,16 +428,13 @@
     a.click();
     a.remove();
   };
+  const escapeHTML = (str) =>
+    String(str).replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
 
   // ---------- State ----------
-  const defaultState = {
-    classes: [], // { id, name }
-    active: null, // { classId, startISO }
-    sessions: [] // { id, classId, startISO, endISO }
-  };
-
-  const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
-
+  const defaultState = { classes: [], active: null, sessions: [] };
   const loadState = () => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -157,10 +445,8 @@
       return structuredClone(defaultState);
     }
   };
-
-  const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-
   let state = loadState();
+  const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 
   // ---------- DOM ----------
   const els = {
@@ -180,52 +466,32 @@
   };
 
   // ---------- Core logic ----------
-  function getClassById(id) {
-    return state.classes.find(c => c.id === id) || null;
-  }
+  const getClassById = (id) => state.classes.find(c => c.id === id) || null;
 
-  function getActiveElapsedMs(now = new Date()) {
+  const getActiveElapsedMs = (now = new Date()) => {
     if (!state.active) return 0;
-    const start = fromISO(state.active.startISO);
-    return msBetween(start, now);
-  }
+    return msBetween(fromISO(state.active.startISO), now);
+  };
 
   function stopActiveTimer(endDate = new Date()) {
     if (!state.active) return;
-
     const { classId, startISO } = state.active;
     const start = fromISO(startISO);
     const end = new Date(endDate);
-
-    if (end <= start) {
-      state.active = null;
-      saveState();
-      return;
-    }
-
-    state.sessions.unshift({
-      id: uid(),
-      classId,
-      startISO: toISO(start),
-      endISO: toISO(end),
-    });
+    if (end <= start) { state.active = null; saveState(); return; }
+    state.sessions.unshift({ id: uid(), classId, startISO: toISO(start), endISO: toISO(end) });
     state.active = null;
     saveState();
   }
 
   function startTimerForClass(classId) {
-    // If a timer is running, stop it first (creates a session).
     if (state.active) stopActiveTimer(new Date());
-
     state.active = { classId, startISO: toISO(new Date()) };
     saveState();
   }
 
   function deleteClass(classId) {
-    // Stop timer if it's for this class.
     if (state.active?.classId === classId) stopActiveTimer(new Date());
-
-    // Remove sessions for the class.
     state.sessions = state.sessions.filter(s => s.classId !== classId);
     state.classes = state.classes.filter(c => c.id !== classId);
     saveState();
@@ -240,7 +506,6 @@
     const now = new Date();
     const dayStart = startOfDay(now);
     const weekStart = startOfWeek(now);
-
     let today = 0, week = 0, all = 0;
 
     for (const s of state.sessions) {
@@ -249,14 +514,9 @@
       const end = fromISO(s.endISO);
       const dur = msBetween(start, end);
       all += dur;
-
-      // Today overlap
       today += overlapMs(start, end, dayStart, now);
-      // Week overlap
       week += overlapMs(start, end, weekStart, now);
     }
-
-    // Include active timer in totals if running for this class
     if (state.active?.classId === classId) {
       const start = fromISO(state.active.startISO);
       const end = now;
@@ -265,37 +525,33 @@
       today += overlapMs(start, end, dayStart, now);
       week += overlapMs(start, end, weekStart, now);
     }
-
     return { today, week, all };
-  }
-
-  function overlapMs(aStart, aEnd, bStart, bEnd) {
-    const start = Math.max(aStart.getTime(), bStart.getTime());
-    const end = Math.min(aEnd.getTime(), bEnd.getTime());
-    return Math.max(0, end - start);
   }
 
   // ---------- Rendering ----------
   function render() {
-    // Status pill + active timer display
+    // Status
     if (state.active) {
       const c = getClassById(state.active.classId);
-      els.statusPill.textContent = `Tracking: ${c ? c.name : "Unknown class"}`;
       els.statusPill.className = "pill ok";
+      els.statusPill.innerHTML = `<span class="dot"></span><span>Tracking: ${escapeHTML(c ? c.name : "Unknown")}</span>`;
       els.activeMeta.textContent = `Started ${fromISO(state.active.startISO).toLocaleString()}`;
+      els.activeTimerText.textContent = fmtHMS(getActiveElapsedMs(new Date()));
     } else {
-      els.statusPill.textContent = "No active timer";
-      els.statusPill.className = "pill danger";
+      els.statusPill.className = "pill bad";
+      els.statusPill.innerHTML = `<span class="dot"></span><span>No active timer</span>`;
       els.activeMeta.textContent = "";
       els.activeTimerText.textContent = "00:00:00";
     }
 
-    // Class totals table
+    // Classes
     els.classTableBody.innerHTML = "";
     const sorted = [...state.classes].sort((a,b) => a.name.localeCompare(b.name));
     if (sorted.length === 0) {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="5" class="muted">Add a class to begin.</td>`;
+      tr.innerHTML = `<td colspan="5" class="small" style="padding:16px; color: var(--muted);">
+        Add a class to begin.
+      </td>`;
       els.classTableBody.appendChild(tr);
     } else {
       for (const c of sorted) {
@@ -305,17 +561,21 @@
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>
-            ${escapeHTML(c.name)}
-            ${isActive ? ` <span class="pill ok">active</span>` : ""}
+            <div class="nameCell">
+              <div>${escapeHTML(c.name)}</div>
+              ${isActive ? `<span class="badgeActive">active</span>` : ``}
+            </div>
           </td>
           <td class="right mono">${fmtHMS(t.today)}</td>
           <td class="right mono">${fmtHMS(t.week)}</td>
           <td class="right mono">${fmtHMS(t.all)}</td>
           <td class="right">
-            <div class="actions" style="justify-content:flex-end;">
-              <button data-action="toggle" data-id="${c.id}">${isActive ? "Stop" : "Start"}</button>
-              <button data-action="rename" data-id="${c.id}">Rename</button>
-              <button data-action="delete" data-id="${c.id}">Delete</button>
+            <div class="actions">
+              <button class="btn ${isActive ? "" : "btnPrimary"}" data-action="toggle" data-id="${c.id}">
+                ${isActive ? "Stop" : "Start"}
+              </button>
+              <button class="btn" data-action="rename" data-id="${c.id}">Rename</button>
+              <button class="btn btnDanger" data-action="delete" data-id="${c.id}">Delete</button>
             </div>
           </td>
         `;
@@ -324,6 +584,7 @@
     }
 
     // Filter dropdown
+    const prev = els.filterClass.value;
     els.filterClass.innerHTML = "";
     const optAll = document.createElement("option");
     optAll.value = "";
@@ -335,19 +596,16 @@
       opt.textContent = c.name;
       els.filterClass.appendChild(opt);
     }
-    // Keep current selection if possible
-    if (render._filterValue) els.filterClass.value = render._filterValue;
+    els.filterClass.value = [...els.filterClass.options].some(o => o.value === prev) ? prev : "";
 
-    // History table
+    // History
     const filterId = els.filterClass.value || "";
-    render._filterValue = filterId;
-
     els.historyBody.innerHTML = "";
     const sessions = state.sessions.filter(s => !filterId || s.classId === filterId);
 
     if (sessions.length === 0) {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="5" class="muted">No sessions yet.</td>`;
+      tr.innerHTML = `<td colspan="5" class="small" style="padding:16px; color: var(--muted);">No sessions yet.</td>`;
       els.historyBody.appendChild(tr);
     } else {
       for (const s of sessions) {
@@ -358,23 +616,17 @@
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${escapeHTML(c ? c.name : "Unknown class")}</td>
+          <td>${escapeHTML(c ? c.name : "Unknown")}</td>
           <td class="small">${start.toLocaleString()}</td>
           <td class="small">${end.toLocaleString()}</td>
           <td class="right mono">${fmtHMS(dur)}</td>
           <td class="right">
-            <button data-action="delete-session" data-id="${s.id}">Delete</button>
+            <button class="btn btnDanger" data-action="delete-session" data-id="${s.id}">Delete</button>
           </td>
         `;
         els.historyBody.appendChild(tr);
       }
     }
-  }
-
-  function escapeHTML(str) {
-    return String(str).replace(/[&<>"']/g, (c) => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-    }[c]));
   }
 
   // ---------- Events ----------
@@ -398,14 +650,12 @@
   els.classTableBody.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
-
     const action = btn.dataset.action;
     const id = btn.dataset.id;
 
     if (action === "toggle") {
       if (state.active?.classId === id) stopActiveTimer(new Date());
       else startTimerForClass(id);
-      saveState();
       render();
     }
 
@@ -444,7 +694,6 @@
   els.clearHistoryBtn.addEventListener("click", () => {
     if (!confirm("Clear all session history? (Class list will remain)")) return;
     state.sessions = [];
-    // If active, keep it running.
     saveState();
     render();
   });
@@ -461,14 +710,9 @@
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-
-      // Basic validation
       if (!parsed || typeof parsed !== "object") throw new Error("Invalid file.");
       if (!Array.isArray(parsed.classes) || !Array.isArray(parsed.sessions)) throw new Error("Invalid structure.");
-
-      // Optional: stop active timer before importing (prevents mixing)
       if (state.active) stopActiveTimer(new Date());
-
       state = { ...structuredClone(defaultState), ...parsed };
       saveState();
       render();
@@ -486,13 +730,11 @@
     render();
   });
 
-  // Update active timer display every second
   setInterval(() => {
     if (!state.active) return;
     els.activeTimerText.textContent = fmtHMS(getActiveElapsedMs(new Date()));
   }, 1000);
 
-  // Stop timer automatically when tab closes (creates a session)
   window.addEventListener("beforeunload", () => {
     if (state.active) {
       stopActiveTimer(new Date());
