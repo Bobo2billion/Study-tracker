@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Study Time Tracker</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 24px; max-width: 1000px; }
+    h1 { margin: 0 0 12px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    input, button, select { padding: 10px 12px; font-size: 14px; }
+    button { cursor: pointer; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; }
+    th { font-weight: 600; }
+    .muted { color: #666; }
+    .pill { display: inline-block; padding: 4px 8px; border-radius: 999px; border: 1px solid #ddd; font-size: 12px; }
+    .danger { border-color: #f2b8b5; background: #fff5f5; }
+    .ok { border-color: #bfe3c4; background: #f4fff6; }
+    .right { text-align: right; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .small { font-size: 12px; }
+    .footer { margin-top: 14px; display:flex; gap:10px; flex-wrap: wrap; align-items:center; }
+    .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+  </style>
+</head>
+<body>
+  <h1>Study Time Tracker</h1>
+  <div class="muted">Runs locally. Data is saved in your browser (localStorage).</div>
+
+  <div class="card">
+    <div class="row">
+      <label class="small muted" for="className">Add class:</label>
+      <input id="className" placeholder="e.g., Calculus, Physics, Lit" />
+      <button id="addClassBtn">Add</button>
+
+      <span style="flex:1"></span>
+
+      <button id="exportBtn">Export JSON</button>
+      <button id="importBtn">Import JSON</button>
+      <input id="importFile" type="file" accept="application/json" hidden />
+      <button id="resetBtn" title="Clears all data">Reset All</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div><span class="pill" id="statusPill">No active timer</span></div>
+      <div class="mono" id="activeTimerText">00:00:00</div>
+      <span class="muted small" id="activeMeta"></span>
+    </div>
+
+    <table aria-label="Class totals">
+      <thead>
+        <tr>
+          <th>Class</th>
+          <th class="right">Today</th>
+          <th class="right">This week</th>
+          <th class="right">All time</th>
+          <th class="right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="classTableBody"></tbody>
+    </table>
+
+    <div class="footer">
+      <div class="muted small">Week starts Monday.</div>
+      <div class="muted small">Tip: only one timer runs at a time.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content: space-between;">
+      <h2 style="margin:0;">Session history</h2>
+      <div class="row">
+        <label class="small muted" for="filterClass">Filter:</label>
+        <select id="filterClass"></select>
+        <button id="clearHistoryBtn">Clear history</button>
+      </div>
+    </div>
+
+    <table aria-label="History log">
+      <thead>
+        <tr>
+          <th>Class</th>
+          <th>Start</th>
+          <th>End</th>
+          <th class="right">Duration</th>
+          <th class="right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+
+<script>
+(() => {
+  const STORAGE_KEY = "study_time_tracker_v1";
+
+  // ---------- Utilities ----------
+  const pad = (n) => String(n).padStart(2, "0");
+  const fmtHMS = (ms) => {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return `${pad(h)}:${pad(m)}:${pad(sec)}`;
+  };
+
+  const toISO = (d) => new Date(d).toISOString();
+  const fromISO = (s) => new Date(s);
+
+  const startOfDay = (d = new Date()) => {
+    const x = new Date(d);
+    x.setHours(0,0,0,0);
+    return x;
+  };
+
+  // Week starts Monday
+  const startOfWeek = (d = new Date()) => {
+    const x = startOfDay(d);
+    const day = x.getDay(); // 0 Sun .. 6 Sat
+    const diff = (day === 0 ? -6 : 1) - day; // shift to Monday
+    x.setDate(x.getDate() + diff);
+    return x;
+  };
+
+  const msBetween = (a, b) => Math.max(0, b.getTime() - a.getTime());
+
+  const download = (filename, text) => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], {type: "application/json"}));
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  // ---------- State ----------
+  const defaultState = {
+    classes: [], // { id, name }
+    active: null, // { classId, startISO }
+    sessions: [] // { id, classId, startISO, endISO }
+  };
+
+  const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
+
+  const loadState = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return structuredClone(defaultState);
+      const parsed = JSON.parse(raw);
+      return { ...structuredClone(defaultState), ...parsed };
+    } catch {
+      return structuredClone(defaultState);
+    }
+  };
+
+  const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+  let state = loadState();
+
+  // ---------- DOM ----------
+  const els = {
+    className: document.getElementById("className"),
+    addClassBtn: document.getElementById("addClassBtn"),
+    classTableBody: document.getElementById("classTableBody"),
+    statusPill: document.getElementById("statusPill"),
+    activeTimerText: document.getElementById("activeTimerText"),
+    activeMeta: document.getElementById("activeMeta"),
+    exportBtn: document.getElementById("exportBtn"),
+    importBtn: document.getElementById("importBtn"),
+    importFile: document.getElementById("importFile"),
+    resetBtn: document.getElementById("resetBtn"),
+    historyBody: document.getElementById("historyBody"),
+    clearHistoryBtn: document.getElementById("clearHistoryBtn"),
+    filterClass: document.getElementById("filterClass"),
+  };
+
+  // ---------- Core logic ----------
+  function getClassById(id) {
+    return state.classes.find(c => c.id === id) || null;
+  }
+
+  function getActiveElapsedMs(now = new Date()) {
+    if (!state.active) return 0;
+    const start = fromISO(state.active.startISO);
+    return msBetween(start, now);
+  }
+
+  function stopActiveTimer(endDate = new Date()) {
+    if (!state.active) return;
+
+    const { classId, startISO } = state.active;
+    const start = fromISO(startISO);
+    const end = new Date(endDate);
+
+    if (end <= start) {
+      state.active = null;
+      saveState();
+      return;
+    }
+
+    state.sessions.unshift({
+      id: uid(),
+      classId,
+      startISO: toISO(start),
+      endISO: toISO(end),
+    });
+    state.active = null;
+    saveState();
+  }
+
+  function startTimerForClass(classId) {
+    // If a timer is running, stop it first (creates a session).
+    if (state.active) stopActiveTimer(new Date());
+
+    state.active = { classId, startISO: toISO(new Date()) };
+    saveState();
+  }
+
+  function deleteClass(classId) {
+    // Stop timer if it's for this class.
+    if (state.active?.classId === classId) stopActiveTimer(new Date());
+
+    // Remove sessions for the class.
+    state.sessions = state.sessions.filter(s => s.classId !== classId);
+    state.classes = state.classes.filter(c => c.id !== classId);
+    saveState();
+  }
+
+  function deleteSession(sessionId) {
+    state.sessions = state.sessions.filter(s => s.id !== sessionId);
+    saveState();
+  }
+
+  function totalsForClass(classId) {
+    const now = new Date();
+    const dayStart = startOfDay(now);
+    const weekStart = startOfWeek(now);
+
+    let today = 0, week = 0, all = 0;
+
+    for (const s of state.sessions) {
+      if (s.classId !== classId) continue;
+      const start = fromISO(s.startISO);
+      const end = fromISO(s.endISO);
+      const dur = msBetween(start, end);
+      all += dur;
+
+      // Today overlap
+      today += overlapMs(start, end, dayStart, now);
+      // Week overlap
+      week += overlapMs(start, end, weekStart, now);
+    }
+
+    // Include active timer in totals if running for this class
+    if (state.active?.classId === classId) {
+      const start = fromISO(state.active.startISO);
+      const end = now;
+      const dur = msBetween(start, end);
+      all += dur;
+      today += overlapMs(start, end, dayStart, now);
+      week += overlapMs(start, end, weekStart, now);
+    }
+
+    return { today, week, all };
+  }
+
+  function overlapMs(aStart, aEnd, bStart, bEnd) {
+    const start = Math.max(aStart.getTime(), bStart.getTime());
+    const end = Math.min(aEnd.getTime(), bEnd.getTime());
+    return Math.max(0, end - start);
+  }
+
+  // ---------- Rendering ----------
+  function render() {
+    // Status pill + active timer display
+    if (state.active) {
+      const c = getClassById(state.active.classId);
+      els.statusPill.textContent = `Tracking: ${c ? c.name : "Unknown class"}`;
+      els.statusPill.className = "pill ok";
+      els.activeMeta.textContent = `Started ${fromISO(state.active.startISO).toLocaleString()}`;
+    } else {
+      els.statusPill.textContent = "No active timer";
+      els.statusPill.className = "pill danger";
+      els.activeMeta.textContent = "";
+      els.activeTimerText.textContent = "00:00:00";
+    }
+
+    // Class totals table
+    els.classTableBody.innerHTML = "";
+    const sorted = [...state.classes].sort((a,b) => a.name.localeCompare(b.name));
+    if (sorted.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" class="muted">Add a class to begin.</td>`;
+      els.classTableBody.appendChild(tr);
+    } else {
+      for (const c of sorted) {
+        const t = totalsForClass(c.id);
+        const isActive = state.active?.classId === c.id;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            ${escapeHTML(c.name)}
+            ${isActive ? ` <span class="pill ok">active</span>` : ""}
+          </td>
+          <td class="right mono">${fmtHMS(t.today)}</td>
+          <td class="right mono">${fmtHMS(t.week)}</td>
+          <td class="right mono">${fmtHMS(t.all)}</td>
+          <td class="right">
+            <div class="actions" style="justify-content:flex-end;">
+              <button data-action="toggle" data-id="${c.id}">${isActive ? "Stop" : "Start"}</button>
+              <button data-action="rename" data-id="${c.id}">Rename</button>
+              <button data-action="delete" data-id="${c.id}">Delete</button>
+            </div>
+          </td>
+        `;
+        els.classTableBody.appendChild(tr);
+      }
+    }
+
+    // Filter dropdown
+    els.filterClass.innerHTML = "";
+    const optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = "All classes";
+    els.filterClass.appendChild(optAll);
+    for (const c of sorted) {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.name;
+      els.filterClass.appendChild(opt);
+    }
+    // Keep current selection if possible
+    if (render._filterValue) els.filterClass.value = render._filterValue;
+
+    // History table
+    const filterId = els.filterClass.value || "";
+    render._filterValue = filterId;
+
+    els.historyBody.innerHTML = "";
+    const sessions = state.sessions.filter(s => !filterId || s.classId === filterId);
+
+    if (sessions.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" class="muted">No sessions yet.</td>`;
+      els.historyBody.appendChild(tr);
+    } else {
+      for (const s of sessions) {
+        const c = getClassById(s.classId);
+        const start = fromISO(s.startISO);
+        const end = fromISO(s.endISO);
+        const dur = msBetween(start, end);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHTML(c ? c.name : "Unknown class")}</td>
+          <td class="small">${start.toLocaleString()}</td>
+          <td class="small">${end.toLocaleString()}</td>
+          <td class="right mono">${fmtHMS(dur)}</td>
+          <td class="right">
+            <button data-action="delete-session" data-id="${s.id}">Delete</button>
+          </td>
+        `;
+        els.historyBody.appendChild(tr);
+      }
+    }
+  }
+
+  function escapeHTML(str) {
+    return String(str).replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  // ---------- Events ----------
+  els.addClassBtn.addEventListener("click", () => {
+    const name = els.className.value.trim();
+    if (!name) return;
+    if (state.classes.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+      alert("That class already exists.");
+      return;
+    }
+    state.classes.push({ id: uid(), name });
+    els.className.value = "";
+    saveState();
+    render();
+  });
+
+  els.className.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") els.addClassBtn.click();
+  });
+
+  els.classTableBody.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+
+    if (action === "toggle") {
+      if (state.active?.classId === id) stopActiveTimer(new Date());
+      else startTimerForClass(id);
+      saveState();
+      render();
+    }
+
+    if (action === "rename") {
+      const c = getClassById(id);
+      if (!c) return;
+      const newName = prompt("Rename class:", c.name);
+      if (!newName) return;
+      const trimmed = newName.trim();
+      if (!trimmed) return;
+      c.name = trimmed;
+      saveState();
+      render();
+    }
+
+    if (action === "delete") {
+      const c = getClassById(id);
+      if (!c) return;
+      if (!confirm(`Delete "${c.name}" and all its sessions?`)) return;
+      deleteClass(id);
+      render();
+    }
+  });
+
+  els.historyBody.addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    if (btn.dataset.action === "delete-session") {
+      deleteSession(btn.dataset.id);
+      render();
+    }
+  });
+
+  els.filterClass.addEventListener("change", () => render());
+
+  els.clearHistoryBtn.addEventListener("click", () => {
+    if (!confirm("Clear all session history? (Class list will remain)")) return;
+    state.sessions = [];
+    // If active, keep it running.
+    saveState();
+    render();
+  });
+
+  els.exportBtn.addEventListener("click", () => {
+    const payload = JSON.stringify(state, null, 2);
+    download(`study-tracker-export-${new Date().toISOString().slice(0,10)}.json`, payload);
+  });
+
+  els.importBtn.addEventListener("click", () => els.importFile.click());
+  els.importFile.addEventListener("change", async () => {
+    const file = els.importFile.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      // Basic validation
+      if (!parsed || typeof parsed !== "object") throw new Error("Invalid file.");
+      if (!Array.isArray(parsed.classes) || !Array.isArray(parsed.sessions)) throw new Error("Invalid structure.");
+
+      // Optional: stop active timer before importing (prevents mixing)
+      if (state.active) stopActiveTimer(new Date());
+
+      state = { ...structuredClone(defaultState), ...parsed };
+      saveState();
+      render();
+    } catch (err) {
+      alert("Import failed: " + (err?.message || "Unknown error"));
+    } finally {
+      els.importFile.value = "";
+    }
+  });
+
+  els.resetBtn.addEventListener("click", () => {
+    if (!confirm("Reset everything? This cannot be undone.")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = loadState();
+    render();
+  });
+
+  // Update active timer display every second
+  setInterval(() => {
+    if (!state.active) return;
+    els.activeTimerText.textContent = fmtHMS(getActiveElapsedMs(new Date()));
+  }, 1000);
+
+  // Stop timer automatically when tab closes (creates a session)
+  window.addEventListener("beforeunload", () => {
+    if (state.active) {
+      stopActiveTimer(new Date());
+      saveState();
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
