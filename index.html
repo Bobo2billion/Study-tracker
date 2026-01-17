@@ -171,6 +171,11 @@
     .btnGhost{
       background: transparent;
     }
+    .btn:disabled{
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+    }
 
     .row{
       display:flex;
@@ -284,6 +289,65 @@
     @media (min-width: 900px){
       .grid{ grid-template-columns: 1fr; }
     }
+
+    /* Focus / Fullscreen overlay */
+    .focusOverlay{
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 9999;
+      background:
+        radial-gradient(1200px 700px at 20% 0%, rgba(124, 92, 255, .25), transparent 60%),
+        radial-gradient(900px 550px at 90% 25%, rgba(64, 201, 255, .18), transparent 55%),
+        radial-gradient(900px 650px at 50% 110%, rgba(98, 219, 143, .14), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      padding: 28px;
+    }
+    .focusOverlay.show{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+    }
+    .focusTop{
+      width: min(980px, 100%);
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+    .focusPill{
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      font-size: 14px;
+      color: var(--text);
+    }
+    .focusMeta{
+      text-align: right;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .focusTimer{
+      font-size: clamp(64px, 10vw, 140px);
+      letter-spacing: 1.5px;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 14px 50px rgba(0,0,0,.45);
+    }
+    .focusBottom{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .focusHint{
+      color: var(--muted2);
+      font-size: 12px;
+    }
   </style>
 </head>
 
@@ -323,7 +387,10 @@
             <span class="pill bad" id="statusPill"><span class="dot"></span><span>No active timer</span></span>
             <div class="timerBig mono" id="activeTimerText">00:00:00</div>
           </div>
-          <div class="meta" id="activeMeta"></div>
+          <div class="row" style="gap:10px; align-items:center;">
+            <div class="meta" id="activeMeta"></div>
+            <button class="btn" id="focusOpenBtn" title="Open fullscreen timer" disabled>Focus</button>
+          </div>
         </div>
 
         <div class="tableWrap" style="margin-top:14px;">
@@ -371,6 +438,26 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- Focus / Fullscreen Timer Overlay -->
+  <div id="focusOverlay" class="focusOverlay" aria-hidden="true">
+    <div class="focusTop">
+      <div class="focusPill" id="focusClassPill">Studying: —</div>
+      <div class="focusMeta">
+        <div id="focusDate">—</div>
+        <div id="focusClock">—</div>
+      </div>
+    </div>
+
+    <div class="focusTimer mono" id="focusTimer">00:00:00</div>
+
+    <div class="focusBottom">
+      <button class="btn" id="focusFsBtn" title="Toggle browser fullscreen">Fullscreen</button>
+      <button class="btn btnDanger" id="focusExitBtn">Exit</button>
+    </div>
+
+    <div class="focusHint">Tip: Press <span class="mono">Esc</span> to exit.</div>
   </div>
 
 <script>
@@ -463,6 +550,15 @@
     historyBody: document.getElementById("historyBody"),
     clearHistoryBtn: document.getElementById("clearHistoryBtn"),
     filterClass: document.getElementById("filterClass"),
+
+    focusOpenBtn: document.getElementById("focusOpenBtn"),
+    focusOverlay: document.getElementById("focusOverlay"),
+    focusTimer: document.getElementById("focusTimer"),
+    focusClassPill: document.getElementById("focusClassPill"),
+    focusDate: document.getElementById("focusDate"),
+    focusClock: document.getElementById("focusClock"),
+    focusExitBtn: document.getElementById("focusExitBtn"),
+    focusFsBtn: document.getElementById("focusFsBtn"),
   };
 
   // ---------- Core logic ----------
@@ -528,6 +624,45 @@
     return { today, week, all };
   }
 
+  // ---------- Focus Mode ----------
+  function updateFocusUI() {
+    if (!state.active) return;
+    const c = getClassById(state.active.classId);
+    const now = new Date();
+
+    els.focusClassPill.textContent = `Studying: ${c ? c.name : "Unknown"}`;
+    els.focusTimer.textContent = fmtHMS(getActiveElapsedMs(now));
+    els.focusDate.textContent = now.toLocaleDateString(undefined, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+    els.focusClock.textContent = now.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+  }
+
+  function openFocusMode() {
+    if (!state.active) return;
+    els.focusOverlay.classList.add("show");
+    els.focusOverlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    updateFocusUI();
+  }
+
+  function closeFocusMode() {
+    els.focusOverlay.classList.remove("show");
+    els.focusOverlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }
+
+  async function toggleBrowserFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await els.focusOverlay.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (_) {
+      // Some browsers may block fullscreen without a direct user gesture; ignore.
+    }
+  }
+
   // ---------- Rendering ----------
   function render() {
     // Status
@@ -537,11 +672,15 @@
       els.statusPill.innerHTML = `<span class="dot"></span><span>Tracking: ${escapeHTML(c ? c.name : "Unknown")}</span>`;
       els.activeMeta.textContent = `Started ${fromISO(state.active.startISO).toLocaleString()}`;
       els.activeTimerText.textContent = fmtHMS(getActiveElapsedMs(new Date()));
+      els.focusOpenBtn.disabled = false;
     } else {
       els.statusPill.className = "pill bad";
       els.statusPill.innerHTML = `<span class="dot"></span><span>No active timer</span>`;
       els.activeMeta.textContent = "";
       els.activeTimerText.textContent = "00:00:00";
+      els.focusOpenBtn.disabled = true;
+
+      if (els.focusOverlay.classList.contains("show")) closeFocusMode();
     }
 
     // Classes
@@ -730,11 +869,25 @@
     render();
   });
 
+  // Focus mode controls
+  els.focusOpenBtn.addEventListener("click", openFocusMode);
+  els.focusExitBtn.addEventListener("click", closeFocusMode);
+  els.focusFsBtn.addEventListener("click", toggleBrowserFullscreen);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && els.focusOverlay.classList.contains("show")) {
+      closeFocusMode();
+    }
+  });
+
+  // Update active timer display every second (and focus overlay if open)
   setInterval(() => {
     if (!state.active) return;
     els.activeTimerText.textContent = fmtHMS(getActiveElapsedMs(new Date()));
+    if (els.focusOverlay.classList.contains("show")) updateFocusUI();
   }, 1000);
 
+  // Stop timer automatically when tab closes (creates a session)
   window.addEventListener("beforeunload", () => {
     if (state.active) {
       stopActiveTimer(new Date());
