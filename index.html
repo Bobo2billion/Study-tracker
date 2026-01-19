@@ -25,6 +25,8 @@
       --goodBorder: rgba(98, 219, 143, .30);
       --bad: rgba(255, 123, 123, .14);
       --badBorder: rgba(255, 123, 123, .26);
+      --accent: rgba(124, 92, 255, .30);
+      --accentBorder: rgba(124, 92, 255, .45);
     }
     [data-theme="light"]{
       --bg:#f6f7fb;
@@ -41,6 +43,8 @@
       --goodBorder: rgba(26, 165, 78, .22);
       --bad: rgba(220, 66, 66, .08);
       --badBorder: rgba(220, 66, 66, .18);
+      --accent: rgba(124, 92, 255, .16);
+      --accentBorder: rgba(124, 92, 255, .28);
     }
 
     *{ box-sizing:border-box; }
@@ -119,12 +123,12 @@
     }
 
     /* Inputs / buttons */
-    input, select, button{
+    input, select, button, textarea{
       font-family: inherit;
       font-size: 14px;
       color: var(--text);
     }
-    input, select{
+    input, select, textarea{
       background: rgba(255,255,255,.06);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -132,11 +136,13 @@
       outline: none;
       min-height: 40px;
     }
+    textarea{ min-height: 110px; resize: vertical; }
     [data-theme="light"] input,
-    [data-theme="light"] select{
+    [data-theme="light"] select,
+    [data-theme="light"] textarea{
       background: rgba(255,255,255,.80);
     }
-    input:focus, select:focus{
+    input:focus, select:focus, textarea:focus{
       box-shadow: var(--focus);
       border-color: rgba(145, 180, 255, .35);
     }
@@ -209,12 +215,14 @@
     }
     .pill.ok{ background: var(--good); border-color: var(--goodBorder); color: var(--text); }
     .pill.bad{ background: var(--bad); border-color: var(--badBorder); color: var(--text); }
+    .pill.accent{ background: var(--accent); border-color: var(--accentBorder); color: var(--text); }
     .dot{
       width: 8px; height: 8px; border-radius: 50%;
       background: rgba(255,255,255,.55);
     }
     .pill.ok .dot{ background: rgba(98, 219, 143, .95); }
     .pill.bad .dot{ background: rgba(255, 123, 123, .95); }
+    .pill.accent .dot{ background: rgba(124, 92, 255, .95); }
 
     .timerBig{
       font-family: var(--mono);
@@ -237,7 +245,7 @@
     table{
       width:100%;
       border-collapse: collapse;
-      min-width: 780px;
+      min-width: 980px;
       background: rgba(255,255,255,.03);
     }
     th, td{
@@ -309,7 +317,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 22px;
+      gap: 18px;
     }
     .focusTop{
       width: min(980px, 100%);
@@ -348,6 +356,119 @@
       color: var(--muted2);
       font-size: 12px;
     }
+    .focusProgressWrap{
+      width: min(980px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      overflow: hidden;
+      height: 14px;
+      display: none;
+    }
+    .focusProgressBar{
+      height: 100%;
+      width: 0%;
+      background: rgba(124, 92, 255, .55);
+      transition: width .2s ease;
+    }
+    .focusProgressMeta{
+      width: min(980px, 100%);
+      display:none;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    /* Modals */
+    .modalOverlay{
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 10000;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      padding: 18px;
+    }
+    [data-theme="light"] .modalOverlay{
+      background: rgba(20,24,35,.25);
+    }
+    .modalOverlay.show{ display:flex; align-items:center; justify-content:center; }
+    .modal{
+      width: min(680px, 100%);
+      background: linear-gradient(180deg, var(--panel2), var(--panel));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .modalHeader{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .modalTitle{
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: .2px;
+    }
+    .modalSub{
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .modalGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .segmented{
+      display:flex;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow:hidden;
+      background: rgba(255,255,255,.05);
+    }
+    .segmented button{
+      flex:1;
+      border:0;
+      background: transparent;
+      padding: 10px 12px;
+      cursor:pointer;
+      color: var(--muted);
+      transition: background .15s ease, color .15s ease;
+    }
+    .segmented button.active{
+      background: rgba(124, 92, 255, .22);
+      color: var(--text);
+    }
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 560px){
+      .twoCol{ grid-template-columns: 1fr; }
+    }
+    .rangeRow{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    input[type="range"]{ width: 260px; }
+    .kbd{
+      font-family: var(--mono);
+      font-size: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      padding: 3px 7px;
+      border-radius: 8px;
+      color: var(--muted);
+    }
   </style>
 </head>
 
@@ -377,7 +498,7 @@
           <input id="className" placeholder="Add a class (e.g., Calc, Physics, Lit)" style="flex:1; min-width: 240px;" />
           <button class="btn btnPrimary" id="addClassBtn">Add class</button>
           <div class="spacer"></div>
-          <div class="small">Week starts Monday.</div>
+          <div class="small">Shortcuts: <span class="kbd">Space</span> stop/start last • <span class="kbd">F</span> focus • <span class="kbd">Esc</span> exit</div>
         </div>
       </div>
 
@@ -413,7 +534,7 @@
         <div class="row" style="justify-content:space-between; align-items:flex-end;">
           <div>
             <h2 style="margin:0; font-size:16px;">Session history</h2>
-            <div class="small">Shows exact start/end timestamps for each session.</div>
+            <div class="small">Notes + productivity are saved per session.</div>
           </div>
           <div class="row">
             <label class="small" for="filterClass">Filter</label>
@@ -430,6 +551,8 @@
                 <th>Start</th>
                 <th>End</th>
                 <th class="right">Duration</th>
+                <th>Notes</th>
+                <th class="right">Prod.</th>
                 <th class="right">Actions</th>
               </tr>
             </thead>
@@ -452,12 +575,85 @@
 
     <div class="focusTimer mono" id="focusTimer">00:00:00</div>
 
+    <div class="focusProgressWrap" id="focusProgressWrap">
+      <div class="focusProgressBar" id="focusProgressBar"></div>
+    </div>
+    <div class="focusProgressMeta" id="focusProgressMeta">
+      <div id="focusProgressLeft">—</div>
+      <div id="focusProgressRight">—</div>
+    </div>
+
     <div class="focusBottom">
       <button class="btn" id="focusFsBtn" title="Toggle browser fullscreen">Fullscreen</button>
       <button class="btn btnDanger" id="focusExitBtn">Exit</button>
     </div>
 
     <div class="focusHint">Tip: Press <span class="mono">Esc</span> to exit.</div>
+  </div>
+
+  <!-- Start Session Modal -->
+  <div id="startModalOverlay" class="modalOverlay" aria-hidden="true">
+    <div class="modal">
+      <div class="modalHeader">
+        <div>
+          <h3 class="modalTitle" id="startModalTitle">Start session</h3>
+          <p class="modalSub">Choose indefinite (counts up) or a goal time (counts down).</p>
+        </div>
+        <button class="btn" id="startModalCloseBtn" title="Close">Close</button>
+      </div>
+
+      <div class="modalGrid">
+        <div class="segmented" role="tablist" aria-label="Mode">
+          <button id="modeIndefBtn" class="active" type="button">Indefinite</button>
+          <button id="modeGoalBtn" type="button">Goal time</button>
+        </div>
+
+        <div class="twoCol">
+          <div>
+            <label class="small" for="goalMinutesInput">Goal minutes (only for goal time)</label>
+            <input id="goalMinutesInput" type="number" min="1" step="1" placeholder="e.g., 45" />
+          </div>
+          <div>
+            <label class="small" for="goalSecondsInput">Optional extra seconds</label>
+            <input id="goalSecondsInput" type="number" min="0" max="59" step="1" placeholder="0–59" />
+          </div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn btnPrimary" id="startSessionConfirmBtn">Start</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Session Modal -->
+  <div id="endModalOverlay" class="modalOverlay" aria-hidden="true">
+    <div class="modal">
+      <div class="modalHeader">
+        <div>
+          <h3 class="modalTitle" id="endModalTitle">Session complete</h3>
+          <p class="modalSub" id="endModalSub">Add notes and a productivity rating (1–10).</p>
+        </div>
+        <button class="btn" id="endModalSkipBtn" title="Skip">Skip</button>
+      </div>
+
+      <div class="modalGrid">
+        <div>
+          <label class="small" for="sessionNotes">Notes (optional)</label>
+          <textarea id="sessionNotes" placeholder="What did you work on?"></textarea>
+        </div>
+
+        <div class="rangeRow">
+          <label class="small" for="prodRange">Productivity (1–10)</label>
+          <input id="prodRange" type="range" min="1" max="10" step="1" value="7" />
+          <span class="pill accent"><span class="dot"></span><span id="prodValue">7</span></span>
+        </div>
+
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn btnPrimary" id="endModalSaveBtn">Save</button>
+        </div>
+      </div>
+    </div>
   </div>
 
 <script>
@@ -487,6 +683,7 @@
   };
   const toISO = (d) => new Date(d).toISOString();
   const fromISO = (s) => new Date(s);
+
   const startOfDay = (d = new Date()) => {
     const x = new Date(d);
     x.setHours(0,0,0,0);
@@ -500,13 +697,16 @@
     x.setDate(x.getDate() + diff);
     return x;
   };
+
   const msBetween = (a, b) => Math.max(0, b.getTime() - a.getTime());
   const overlapMs = (aStart, aEnd, bStart, bEnd) => {
     const start = Math.max(aStart.getTime(), bStart.getTime());
     const end = Math.min(aEnd.getTime(), bEnd.getTime());
     return Math.max(0, end - start);
   };
+
   const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
+
   const download = (filename, text) => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([text], {type: "application/json"}));
@@ -515,13 +715,28 @@
     a.click();
     a.remove();
   };
+
   const escapeHTML = (str) =>
     String(str).replace(/[&<>"']/g, (c) => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
     }[c]));
 
+  const isTypingTarget = (el) => {
+    if (!el) return false;
+    const tag = (el.tagName || "").toLowerCase();
+    return tag === "input" || tag === "textarea" || tag === "select" || el.isContentEditable;
+  };
+
   // ---------- State ----------
-  const defaultState = { classes: [], active: null, sessions: [] };
+  // active: { classId, startISO, mode: "indef"|"goal", goalMs?: number }
+  // sessions: { id, classId, startISO, endISO, note?: string, rating?: number, mode?: string, goalMs?: number }
+  const defaultState = {
+    classes: [],
+    active: null,
+    sessions: [],
+    lastClassId: null
+  };
+
   const loadState = () => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -532,6 +747,7 @@
       return structuredClone(defaultState);
     }
   };
+
   let state = loadState();
   const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 
@@ -559,49 +775,61 @@
     focusClock: document.getElementById("focusClock"),
     focusExitBtn: document.getElementById("focusExitBtn"),
     focusFsBtn: document.getElementById("focusFsBtn"),
+    focusProgressWrap: document.getElementById("focusProgressWrap"),
+    focusProgressBar: document.getElementById("focusProgressBar"),
+    focusProgressMeta: document.getElementById("focusProgressMeta"),
+    focusProgressLeft: document.getElementById("focusProgressLeft"),
+    focusProgressRight: document.getElementById("focusProgressRight"),
+
+    startModalOverlay: document.getElementById("startModalOverlay"),
+    startModalTitle: document.getElementById("startModalTitle"),
+    startModalCloseBtn: document.getElementById("startModalCloseBtn"),
+    modeIndefBtn: document.getElementById("modeIndefBtn"),
+    modeGoalBtn: document.getElementById("modeGoalBtn"),
+    goalMinutesInput: document.getElementById("goalMinutesInput"),
+    goalSecondsInput: document.getElementById("goalSecondsInput"),
+    startSessionConfirmBtn: document.getElementById("startSessionConfirmBtn"),
+
+    endModalOverlay: document.getElementById("endModalOverlay"),
+    endModalTitle: document.getElementById("endModalTitle"),
+    endModalSub: document.getElementById("endModalSub"),
+    sessionNotes: document.getElementById("sessionNotes"),
+    prodRange: document.getElementById("prodRange"),
+    prodValue: document.getElementById("prodValue"),
+    endModalSkipBtn: document.getElementById("endModalSkipBtn"),
+    endModalSaveBtn: document.getElementById("endModalSaveBtn"),
   };
 
-  // ---------- Core logic ----------
+  // ---------- Core ----------
   const getClassById = (id) => state.classes.find(c => c.id === id) || null;
 
-  const getActiveElapsedMs = (now = new Date()) => {
+  const getElapsedMs = (now = new Date()) => {
     if (!state.active) return 0;
     return msBetween(fromISO(state.active.startISO), now);
   };
 
-  function stopActiveTimer(endDate = new Date()) {
-    if (!state.active) return;
-    const { classId, startISO } = state.active;
-    const start = fromISO(startISO);
-    const end = new Date(endDate);
-    if (end <= start) { state.active = null; saveState(); return; }
-    state.sessions.unshift({ id: uid(), classId, startISO: toISO(start), endISO: toISO(end) });
-    state.active = null;
-    saveState();
-  }
+  const getDisplayMs = (now = new Date()) => {
+    if (!state.active) return 0;
+    const elapsed = getElapsedMs(now);
+    if (state.active.mode === "goal" && typeof state.active.goalMs === "number") {
+      return Math.max(0, state.active.goalMs - elapsed);
+    }
+    return elapsed;
+  };
 
-  function startTimerForClass(classId) {
-    if (state.active) stopActiveTimer(new Date());
-    state.active = { classId, startISO: toISO(new Date()) };
-    saveState();
-  }
-
-  function deleteClass(classId) {
-    if (state.active?.classId === classId) stopActiveTimer(new Date());
-    state.sessions = state.sessions.filter(s => s.classId !== classId);
-    state.classes = state.classes.filter(c => c.id !== classId);
-    saveState();
-  }
-
-  function deleteSession(sessionId) {
-    state.sessions = state.sessions.filter(s => s.id !== sessionId);
-    saveState();
-  }
+  const getActiveEndTime = () => {
+    if (!state.active) return null;
+    if (state.active.mode !== "goal") return null;
+    if (typeof state.active.goalMs !== "number") return null;
+    const start = fromISO(state.active.startISO);
+    return new Date(start.getTime() + state.active.goalMs);
+  };
 
   function totalsForClass(classId) {
     const now = new Date();
     const dayStart = startOfDay(now);
     const weekStart = startOfWeek(now);
+
     let today = 0, week = 0, all = 0;
 
     for (const s of state.sessions) {
@@ -613,6 +841,8 @@
       today += overlapMs(start, end, dayStart, now);
       week += overlapMs(start, end, weekStart, now);
     }
+
+    // Include active session time in totals (always count actual elapsed)
     if (state.active?.classId === classId) {
       const start = fromISO(state.active.startISO);
       const end = now;
@@ -621,19 +851,153 @@
       today += overlapMs(start, end, dayStart, now);
       week += overlapMs(start, end, weekStart, now);
     }
+
     return { today, week, all };
+  }
+
+  // ---------- Modals ----------
+  let startModalTargetClassId = null;
+  let startModalMode = "indef"; // "indef" | "goal"
+  let pendingSessionIdForNotes = null; // store session id that needs notes/rating
+
+  function openStartModal(classId) {
+    const c = getClassById(classId);
+    if (!c) return;
+
+    startModalTargetClassId = classId;
+    els.startModalTitle.textContent = `Start session: ${c.name}`;
+
+    // reset fields
+    startModalMode = "indef";
+    els.modeIndefBtn.classList.add("active");
+    els.modeGoalBtn.classList.remove("active");
+    els.goalMinutesInput.value = "";
+    els.goalSecondsInput.value = "";
+
+    els.startModalOverlay.classList.add("show");
+    els.startModalOverlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    els.goalMinutesInput.focus();
+  }
+
+  function closeStartModal() {
+    els.startModalOverlay.classList.remove("show");
+    els.startModalOverlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    startModalTargetClassId = null;
+  }
+
+  function openEndModal(sessionId) {
+    const s = state.sessions.find(x => x.id === sessionId);
+    if (!s) return;
+
+    const c = getClassById(s.classId);
+    const durMs = msBetween(fromISO(s.startISO), fromISO(s.endISO));
+    const durStr = fmtHMS(durMs);
+
+    els.endModalTitle.textContent = `Session saved: ${c ? c.name : "Unknown"} (${durStr})`;
+    els.endModalSub.textContent = `Add notes and a productivity rating (1–10).`;
+    els.sessionNotes.value = s.note || "";
+    els.prodRange.value = String(Number.isFinite(s.rating) ? s.rating : 7);
+    els.prodValue.textContent = els.prodRange.value;
+
+    pendingSessionIdForNotes = sessionId;
+
+    els.endModalOverlay.classList.add("show");
+    els.endModalOverlay.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    els.sessionNotes.focus();
+  }
+
+  function closeEndModal() {
+    els.endModalOverlay.classList.remove("show");
+    els.endModalOverlay.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    pendingSessionIdForNotes = null;
+  }
+
+  // ---------- Start/Stop ----------
+  function stopActiveTimer(endDate = new Date(), openNotes = true) {
+    if (!state.active) return;
+
+    const { classId, startISO, mode, goalMs } = state.active;
+    const start = fromISO(startISO);
+    const end = new Date(endDate);
+
+    // Safety: if end <= start, just clear
+    if (end <= start) {
+      state.active = null;
+      saveState();
+      render();
+      return;
+    }
+
+    const newSession = {
+      id: uid(),
+      classId,
+      startISO: toISO(start),
+      endISO: toISO(end),
+      note: "",
+      rating: null,
+      mode: mode || "indef",
+      goalMs: (mode === "goal" && typeof goalMs === "number") ? goalMs : null
+    };
+
+    state.sessions.unshift(newSession);
+    state.active = null;
+    saveState();
+    render();
+
+    if (openNotes) openEndModal(newSession.id);
+  }
+
+  function startTimerForClass(classId, mode, goalMsNullable) {
+    // If running, stop (and collect notes) first
+    if (state.active) stopActiveTimer(new Date(), true);
+
+    const active = {
+      classId,
+      startISO: toISO(new Date()),
+      mode: mode === "goal" ? "goal" : "indef"
+    };
+    if (active.mode === "goal") active.goalMs = goalMsNullable;
+
+    state.active = active;
+    state.lastClassId = classId;
+    saveState();
+    render();
   }
 
   // ---------- Focus Mode ----------
   function updateFocusUI() {
     if (!state.active) return;
+
     const c = getClassById(state.active.classId);
     const now = new Date();
 
     els.focusClassPill.textContent = `Studying: ${c ? c.name : "Unknown"}`;
-    els.focusTimer.textContent = fmtHMS(getActiveElapsedMs(now));
+    els.focusTimer.textContent = fmtHMS(getDisplayMs(now));
     els.focusDate.textContent = now.toLocaleDateString(undefined, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
     els.focusClock.textContent = now.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+
+    // Progress bar only for goal mode
+    if (state.active.mode === "goal" && typeof state.active.goalMs === "number") {
+      const elapsed = getElapsedMs(now);
+      const goal = state.active.goalMs;
+      const pct = Math.max(0, Math.min(1, goal === 0 ? 1 : (elapsed / goal)));
+
+      els.focusProgressWrap.style.display = "block";
+      els.focusProgressMeta.style.display = "flex";
+      els.focusProgressBar.style.width = `${Math.round(pct * 100)}%`;
+
+      const remaining = Math.max(0, goal - elapsed);
+      els.focusProgressLeft.textContent = `Remaining: ${fmtHMS(remaining)}`;
+      els.focusProgressRight.textContent = `Progress: ${Math.round(pct * 100)}%`;
+    } else {
+      els.focusProgressWrap.style.display = "none";
+      els.focusProgressMeta.style.display = "none";
+      els.focusProgressBar.style.width = "0%";
+    }
   }
 
   function openFocusMode() {
@@ -658,9 +1022,7 @@
       } else {
         await document.exitFullscreen();
       }
-    } catch (_) {
-      // Some browsers may block fullscreen without a direct user gesture; ignore.
-    }
+    } catch (_) {}
   }
 
   // ---------- Rendering ----------
@@ -668,10 +1030,28 @@
     // Status
     if (state.active) {
       const c = getClassById(state.active.classId);
-      els.statusPill.className = "pill ok";
-      els.statusPill.innerHTML = `<span class="dot"></span><span>Tracking: ${escapeHTML(c ? c.name : "Unknown")}</span>`;
-      els.activeMeta.textContent = `Started ${fromISO(state.active.startISO).toLocaleString()}`;
-      els.activeTimerText.textContent = fmtHMS(getActiveElapsedMs(new Date()));
+      const now = new Date();
+
+      // Status pill
+      if (state.active.mode === "goal") {
+        els.statusPill.className = "pill accent";
+        els.statusPill.innerHTML = `<span class="dot"></span><span>Goal: ${escapeHTML(c ? c.name : "Unknown")}</span>`;
+      } else {
+        els.statusPill.className = "pill ok";
+        els.statusPill.innerHTML = `<span class="dot"></span><span>Tracking: ${escapeHTML(c ? c.name : "Unknown")}</span>`;
+      }
+
+      // Timer display shows elapsed for indefinite, remaining for goal
+      els.activeTimerText.textContent = fmtHMS(getDisplayMs(now));
+
+      // Meta
+      if (state.active.mode === "goal" && typeof state.active.goalMs === "number") {
+        const end = getActiveEndTime();
+        els.activeMeta.textContent = end ? `Ends ${end.toLocaleString()}` : `Goal session`;
+      } else {
+        els.activeMeta.textContent = `Started ${fromISO(state.active.startISO).toLocaleString()}`;
+      }
+
       els.focusOpenBtn.disabled = false;
     } else {
       els.statusPill.className = "pill bad";
@@ -744,7 +1124,7 @@
 
     if (sessions.length === 0) {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="5" class="small" style="padding:16px; color: var(--muted);">No sessions yet.</td>`;
+      tr.innerHTML = `<td colspan="7" class="small" style="padding:16px; color: var(--muted);">No sessions yet.</td>`;
       els.historyBody.appendChild(tr);
     } else {
       for (const s of sessions) {
@@ -753,14 +1133,24 @@
         const end = fromISO(s.endISO);
         const dur = msBetween(start, end);
 
+        const notePreview = (s.note || "").trim();
+        const noteShort = notePreview.length > 40 ? (notePreview.slice(0, 40) + "…") : notePreview;
+
+        const rating = Number.isFinite(s.rating) ? s.rating : "";
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${escapeHTML(c ? c.name : "Unknown")}</td>
           <td class="small">${start.toLocaleString()}</td>
           <td class="small">${end.toLocaleString()}</td>
           <td class="right mono">${fmtHMS(dur)}</td>
+          <td class="small" title="${escapeHTML(notePreview)}">${escapeHTML(noteShort)}</td>
+          <td class="right mono">${rating}</td>
           <td class="right">
-            <button class="btn btnDanger" data-action="delete-session" data-id="${s.id}">Delete</button>
+            <div class="actions">
+              <button class="btn" data-action="edit-session" data-id="${s.id}">Edit</button>
+              <button class="btn btnDanger" data-action="delete-session" data-id="${s.id}">Delete</button>
+            </div>
           </td>
         `;
         els.historyBody.appendChild(tr);
@@ -768,7 +1158,22 @@
     }
   }
 
-  // ---------- Events ----------
+  // ---------- Goal countdown auto-stop ----------
+  function checkCountdownAutoStop() {
+    if (!state.active) return;
+    if (state.active.mode !== "goal") return;
+    if (typeof state.active.goalMs !== "number") return;
+
+    const now = new Date();
+    const remaining = state.active.goalMs - getElapsedMs(now);
+    if (remaining <= 0) {
+      // End time exactly at goal boundary
+      const end = getActiveEndTime() || now;
+      stopActiveTimer(end, true);
+    }
+  }
+
+  // ---------- Class CRUD ----------
   els.addClassBtn.addEventListener("click", () => {
     const name = els.className.value.trim();
     if (!name) return;
@@ -786,16 +1191,97 @@
     if (e.key === "Enter") els.addClassBtn.click();
   });
 
+  function deleteClass(classId) {
+    if (state.active?.classId === classId) stopActiveTimer(new Date(), true);
+    state.sessions = state.sessions.filter(s => s.classId !== classId);
+    state.classes = state.classes.filter(c => c.id !== classId);
+    if (state.lastClassId === classId) state.lastClassId = null;
+    saveState();
+  }
+
+  function deleteSession(sessionId) {
+    state.sessions = state.sessions.filter(s => s.id !== sessionId);
+    saveState();
+  }
+
+  // ---------- Start Modal events ----------
+  els.modeIndefBtn.addEventListener("click", () => {
+    startModalMode = "indef";
+    els.modeIndefBtn.classList.add("active");
+    els.modeGoalBtn.classList.remove("active");
+  });
+  els.modeGoalBtn.addEventListener("click", () => {
+    startModalMode = "goal";
+    els.modeGoalBtn.classList.add("active");
+    els.modeIndefBtn.classList.remove("active");
+    if (!els.goalMinutesInput.value) els.goalMinutesInput.focus();
+  });
+
+  els.startModalCloseBtn.addEventListener("click", closeStartModal);
+
+  els.startSessionConfirmBtn.addEventListener("click", () => {
+    if (!startModalTargetClassId) return;
+
+    if (startModalMode === "goal") {
+      const mins = Number(els.goalMinutesInput.value || 0);
+      const secs = Number(els.goalSecondsInput.value || 0);
+
+      const totalSeconds = (Math.max(0, mins) * 60) + Math.max(0, Math.min(59, secs));
+      if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) {
+        alert("Enter a goal time (minutes > 0).");
+        return;
+      }
+      const goalMs = totalSeconds * 1000;
+
+      closeStartModal();
+      startTimerForClass(startModalTargetClassId, "goal", goalMs);
+      return;
+    }
+
+    closeStartModal();
+    startTimerForClass(startModalTargetClassId, "indef", null);
+  });
+
+  // ---------- End Modal events ----------
+  els.prodRange.addEventListener("input", () => {
+    els.prodValue.textContent = els.prodRange.value;
+  });
+
+  els.endModalSkipBtn.addEventListener("click", () => {
+    closeEndModal();
+    saveState();
+    render();
+  });
+
+  els.endModalSaveBtn.addEventListener("click", () => {
+    if (!pendingSessionIdForNotes) return;
+    const s = state.sessions.find(x => x.id === pendingSessionIdForNotes);
+    if (!s) { closeEndModal(); return; }
+
+    s.note = String(els.sessionNotes.value || "").slice(0, 2000);
+    s.rating = Number(els.prodRange.value || 0);
+    if (!Number.isFinite(s.rating) || s.rating < 1 || s.rating > 10) s.rating = 7;
+
+    saveState();
+    closeEndModal();
+    render();
+  });
+
+  // ---------- UI table events ----------
   els.classTableBody.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
+
     const action = btn.dataset.action;
     const id = btn.dataset.id;
 
     if (action === "toggle") {
-      if (state.active?.classId === id) stopActiveTimer(new Date());
-      else startTimerForClass(id);
-      render();
+      if (state.active?.classId === id) {
+        stopActiveTimer(new Date(), true);
+      } else {
+        openStartModal(id);
+      }
+      return;
     }
 
     if (action === "rename") {
@@ -808,6 +1294,7 @@
       c.name = trimmed;
       saveState();
       render();
+      return;
     }
 
     if (action === "delete") {
@@ -816,15 +1303,27 @@
       if (!confirm(`Delete "${c.name}" and all its sessions?`)) return;
       deleteClass(id);
       render();
+      return;
     }
   });
 
   els.historyBody.addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
-    if (btn.dataset.action === "delete-session") {
-      deleteSession(btn.dataset.id);
+
+    const action = btn.dataset.action;
+    const id = btn.dataset.id;
+
+    if (action === "delete-session") {
+      deleteSession(id);
       render();
+      return;
+    }
+
+    if (action === "edit-session") {
+      // Open end modal for editing existing session note/rating
+      openEndModal(id);
+      return;
     }
   });
 
@@ -837,6 +1336,7 @@
     render();
   });
 
+  // ---------- Export / Import / Reset ----------
   els.exportBtn.addEventListener("click", () => {
     const payload = JSON.stringify(state, null, 2);
     download(`study-tracker-export-${new Date().toISOString().slice(0,10)}.json`, payload);
@@ -851,7 +1351,10 @@
       const parsed = JSON.parse(text);
       if (!parsed || typeof parsed !== "object") throw new Error("Invalid file.");
       if (!Array.isArray(parsed.classes) || !Array.isArray(parsed.sessions)) throw new Error("Invalid structure.");
-      if (state.active) stopActiveTimer(new Date());
+
+      // If running, stop it first (and save notes)
+      if (state.active) stopActiveTimer(new Date(), true);
+
       state = { ...structuredClone(defaultState), ...parsed };
       saveState();
       render();
@@ -869,32 +1372,67 @@
     render();
   });
 
-  // Focus mode controls
+  // ---------- Focus mode controls ----------
   els.focusOpenBtn.addEventListener("click", openFocusMode);
   els.focusExitBtn.addEventListener("click", closeFocusMode);
   els.focusFsBtn.addEventListener("click", toggleBrowserFullscreen);
 
+  // ---------- Keyboard shortcuts ----------
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && els.focusOverlay.classList.contains("show")) {
-      closeFocusMode();
+    if (isTypingTarget(e.target)) return;
+
+    // Esc: close focus or modals
+    if (e.key === "Escape") {
+      if (els.startModalOverlay.class
+List.remove("show") === false) { closeStartModal(); e.preventDefault(); return; }
+      if (els.endModalOverlay.classList.remove("show") === false) { closeEndModal(); e.preventDefault(); return; }
+      if (els.focusOverlay.classList.contains("show")) { closeFocusMode(); e.preventDefault(); return; }
+      return;
+    }
+
+    // F: open focus mode (if active)
+    if (e.key === "f" || e.key === "F") {
+      if (state.active) openFocusMode();
+      e.preventDefault();
+      return;
+    }
+
+    // Space: stop active, else start last class (opens start modal)
+    if (e.code === "Space") {
+      if (state.active) {
+        stopActiveTimer(new Date(), true);
+      } else if (state.lastClassId) {
+        openStartModal(state.lastClassId);
+      }
+      e.preventDefault();
+      return;
     }
   });
 
-  // Update active timer display every second (and focus overlay if open)
+  // ---------- Timer tick ----------
   setInterval(() => {
     if (!state.active) return;
-    els.activeTimerText.textContent = fmtHMS(getActiveElapsedMs(new Date()));
+
+    const now = new Date();
+    els.activeTimerText.textContent = fmtHMS(getDisplayMs(now));
+
+    // update focus UI if open
     if (els.focusOverlay.classList.contains("show")) updateFocusUI();
-  }, 1000);
+
+    // auto-stop on countdown completion
+    checkCountdownAutoStop();
+  }, 250);
 
   // Stop timer automatically when tab closes (creates a session)
   window.addEventListener("beforeunload", () => {
     if (state.active) {
-      stopActiveTimer(new Date());
+      // do not open notes modal on unload
+      stopActiveTimer(new Date(), false);
       saveState();
     }
   });
 
+  // Initial render
   render();
 })();
 </script>
