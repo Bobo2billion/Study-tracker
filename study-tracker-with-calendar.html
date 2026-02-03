@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Time Tracker with Calendar</title>
+<style>
+:root{
+--bg:#141823;
+--text:#e8eaf0;
+--muted:#9ca3b8;
+--muted2:#6b7280;
+--border:rgba(255,255,255,.08);
+--panel:rgba(255,255,255,.04);
+--panel2:rgba(255,255,255,.07);
+--shadow:0 8px 32px rgba(0,0,0,.4);
+--focus:0 0 0 3px rgba(145, 180, 255, .18);
+--mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace;
+--good: rgba(98, 219, 143, .16);
+--goodBorder: rgba(98, 219, 143, .30);
+--bad: rgba(255, 123, 123, .14);
+--badBorder: rgba(255, 123, 123, .26);
+--accent: rgba(124, 92, 255, .30);
+--accentBorder: rgba(124, 92, 255, .45);
+}
+[data-theme="light"]{
+--bg:#f6f7fb;
+--text:#1a1d2e;
+--muted:#4b5563;
+--muted2:#6b7280;
+--border:rgba(0,0,0,.08);
+--panel:rgba(255,255,255,.70);
+--panel2:rgba(255,255,255,.90);
+--shadow:0 8px 32px rgba(0,0,0,.08);
+--focus:0 0 0 3px rgba(124, 92, 255, .12);
+--good: rgba(26, 165, 78, .12);
+--goodBorder: rgba(26, 165, 78, .22);
+--bad: rgba(220, 66, 66, .08);
+--badBorder: rgba(220, 66, 66, .18);
+--accent: rgba(124, 92, 255, .16);
+--accentBorder: rgba(124, 92, 255, .28);
+}
+
+*{ box-sizing:border-box; }
+html, body{
+margin:0;
+padding:0;
+min-height:100vh;
+background: var(--bg);
+color: var(--text);
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+-webkit-font-smoothing: antialiased;
+}
+
+.container{
+max-width: 1400px;
+margin: 0 auto;
+padding: 20px;
+}
+
+h1{
+margin: 0 0 20px;
+font-size: 26px;
+letter-spacing: -.5px;
+}
+
+h2{
+margin: 0 0 12px;
+font-size: 18px;
+letter-spacing: -.3px;
+}
+
+.row{
+display:flex;
+gap:12px;
+flex-wrap: wrap;
+}
+
+.spacer{ flex:1; }
+
+.small{
+font-size: 13px;
+color: var(--muted);
+}
+
+.mono{ font-family: var(--mono); }
+
+label{
+display:block;
+margin-bottom: 5px;
+font-size: 13px;
+color: var(--muted);
+}
+
+input, select, button, textarea{
+font-family: inherit;
+font-size: 14px;
+color: var(--text);
+}
+
+input, select, textarea{
+background: rgba(255,255,255,.06);
+border: 1px solid var(--border);
+border-radius: 12px;
+padding: 10px 12px;
+outline: none;
+min-height: 40px;
+}
+
+textarea{ min-height: 110px; resize: vertical; }
+
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea{
+background: rgba(255,255,255,.80);
+}
+
+input:focus, select:focus, textarea:focus{
+box-shadow: var(--focus);
+border-color: rgba(145, 180, 255, .35);
+}
+
+button{
+background: rgba(255,255,255,.08);
+border: 1px solid var(--border);
+border-radius: 12px;
+padding: 10px 16px;
+cursor:pointer;
+transition: all .15s ease;
+min-height: 40px;
+}
+
+button:hover{
+background: rgba(255,255,255,.12);
+border-color: rgba(255,255,255,.12);
+}
+
+button:disabled{
+opacity: .5;
+cursor: not-allowed;
+}
+
+.btn{ /* same as button */ }
+
+.btnPrimary{
+background: rgba(124, 92, 255, .22);
+border-color: rgba(124, 92, 255, .35);
+color: var(--text);
+font-weight: 500;
+}
+
+.btnPrimary:hover{
+background: rgba(124, 92, 255, .32);
+border-color: rgba(124, 92, 255, .45);
+}
+
+.btnDanger{
+background: rgba(255, 123, 123, .16);
+border-color: rgba(255, 123, 123, .28);
+color: var(--text);
+font-weight: 500;
+}
+
+.btnDanger:hover{
+background: rgba(255, 123, 123, .26);
+border-color: rgba(255, 123, 123, .40);
+}
+
+.card{
+background: linear-gradient(135deg, var(--panel2), var(--panel));
+border: 1px solid var(--border);
+border-radius: 18px;
+padding: 18px;
+box-shadow: var(--shadow);
+}
+
+.actions{
+display:flex;
+gap:8px;
+flex-wrap: wrap;
+}
+
+.right{ text-align: right; }
+
+.pill{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding: 6px 12px;
+border-radius: 999px;
+border: 1px solid var(--border);
+background: rgba(255,255,255,.06);
+font-size: 13px;
+font-weight: 500;
+white-space: nowrap;
+}
+
+.pill.ok{ background: var(--good); border-color: var(--goodBorder); color: var(--text); }
+.pill.bad{ background: var(--bad); border-color: var(--badBorder); color: var(--text); }
+.pill.accent{ background: var(--accent); border-color: var(--accentBorder); color: var(--text); }
+
+.dot{
+width: 8px; height: 8px; border-radius: 50%;
+background: rgba(255,255,255,.55);
+}
+
+.pill.ok .dot{ background: rgba(98, 219, 143, .95); }
+.pill.bad .dot{ background: rgba(255, 123, 123, .95); }
+.pill.accent .dot{ background: rgba(124, 92, 255, .95); }
+
+.timerBig{
+font-family: var(--mono);
+font-size: 48px;
+font-weight: 600;
+letter-spacing: -1px;
+margin: 8px 0;
+}
+
+.meta{
+font-size: 13px;
+color: var(--muted);
+}
+
+table{
+width:100%;
+border-collapse: collapse;
+min-width: 780px;
+background: rgba(255,255,255,.03);
+}
+
+th, td{
+text-align: left;
+padding: 12px;
+border-bottom: 1px solid var(--border);
+}
+
+th{
+font-weight: 600;
+font-size: 12px;
+text-transform: uppercase;
+letter-spacing: .5px;
+color: var(--muted);
+}
+
+.tableWrap{
+overflow-x: auto;
+border-radius: 14px;
+border: 1px solid var(--border);
+background: rgba(255,255,255,.03);
+}
+
+/* Focus overlay */
+.focusOverlay{
+position: fixed;
+inset: 0;
+background: var(--bg);
+z-index: 9999;
+display: none;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 22px;
+}
+
+.focusOverlay.show{ display:flex; }
+
+.focusTop{
+width: min(980px, 100%);
+display:flex;
+justify-content: space-between;
+align-items: center;
+flex-wrap: wrap;
+gap: 12px;
+}
+
+.focusClassPill{
+font-size: 15px;
+padding: 8px 16px;
+}
+
+.focusTimer{
+font-size: 120px;
+font-weight: 700;
+letter-spacing: -3px;
+}
+
+.focusBottom{
+display:flex;
+gap:12px;
+flex-wrap: wrap;
+}
+
+.focusDate, .focusClock{
+font-size: 16px;
+color: var(--muted);
+}
+
+.focusHint{
+margin-top: 12px;
+color: var(--muted2);
+font-size: 12px;
+}
+
+/* Modal */
+.modalOverlay{
+position: fixed;
+inset: 0;
+display: none;
+z-index: 10000;
+background: rgba(0,0,0,.55);
+backdrop-filter: blur(10px);
+padding: 18px;
+}
+
+[data-theme="light"] .modalOverlay{
+background: rgba(20,24,35,.25);
+}
+
+.modalOverlay.show{ display:flex; align-items:center; justify-content:center; }
+
+.modal{
+width: min(680px, 100%);
+max-height: 90vh;
+overflow-y: auto;
+background: linear-gradient(180deg, var(--panel2), var(--panel));
+border: 1px solid var(--border);
+border-radius: 18px;
+box-shadow: var(--shadow);
+padding: 16px;
+}
+
+.modalHeader{
+display:flex;
+align-items:flex-start;
+justify-content: space-between;
+gap: 10px;
+margin-bottom: 10px;
+}
+
+.modalTitle{
+margin: 0;
+font-size: 15px;
+letter-spacing: .2px;
+}
+
+.modalSub{
+margin: 6px 0 0;
+color: var(--muted);
+font-size: 12px;
+line-height: 1.35;
+}
+
+.modalGrid{
+display:grid;
+grid-template-columns: 1fr;
+gap: 10px;
+margin-top: 10px;
+}
+
+.twoCol{
+display:grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+}
+
+@media (max-width: 560px){
+.twoCol{ grid-template-columns: 1fr; }
+}
+
+/* Calendar styles */
+.calendar{
+background: rgba(255,255,255,.03);
+border: 1px solid var(--border);
+border-radius: 14px;
+overflow: hidden;
+}
+
+.calendarHeader{
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 16px;
+background: rgba(255,255,255,.05);
+border-bottom: 1px solid var(--border);
+}
+
+.calendarTitle{
+font-size: 16px;
+font-weight: 600;
+}
+
+.calendarNav{
+display: flex;
+gap: 8px;
+}
+
+.calendarGrid{
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+}
+
+.calendarDay{
+aspect-ratio: 1;
+border: 1px solid var(--border);
+padding: 8px;
+cursor: pointer;
+transition: background .15s ease;
+position: relative;
+min-height: 80px;
+}
+
+.calendarDay:hover{
+background: rgba(255,255,255,.06);
+}
+
+.calendarDay.otherMonth{
+opacity: 0.4;
+}
+
+.calendarDay.today{
+background: rgba(124, 92, 255, .1);
+}
+
+.calendarDayNumber{
+font-size: 13px;
+font-weight: 600;
+margin-bottom: 4px;
+}
+
+.calendarDayHeader{
+aspect-ratio: unset;
+min-height: unset;
+padding: 12px 8px;
+font-size: 12px;
+font-weight: 600;
+text-transform: uppercase;
+color: var(--muted);
+text-align: center;
+cursor: default;
+}
+
+.calendarDayHeader:hover{
+background: transparent;
+}
+
+.calendarEvents{
+display: flex;
+flex-direction: column;
+gap: 2px;
+}
+
+.calendarEvent{
+font-size: 11px;
+padding: 2px 4px;
+border-radius: 4px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+cursor: pointer;
+}
+
+.calendarEvent.study{
+background: rgba(98, 219, 143, .25);
+border-left: 2px solid rgba(98, 219, 143, .8);
+}
+
+.calendarEvent.class{
+background: rgba(124, 92, 255, .25);
+border-left: 2px solid rgba(124, 92, 255, .8);
+}
+
+.calendarEvent.meeting{
+background: rgba(255, 180, 50, .25);
+border-left: 2px solid rgba(255, 180, 50, .8);
+}
+
+.calendarEvent.other{
+background: rgba(100, 150, 255, .25);
+border-left: 2px solid rgba(100, 150, 255, .8);
+}
+
+.segmented{
+display:flex;
+border: 1px solid var(--border);
+border-radius: 12px;
+overflow:hidden;
+background: rgba(255,255,255,.05);
+}
+
+.segmented button{
+flex:1;
+border:0;
+background: transparent;
+padding: 10px 12px;
+cursor:pointer;
+color: var(--muted);
+transition: background .15s ease, color .15s ease;
+}
+
+.segmented button.active{
+background: rgba(124, 92, 255, .22);
+color: var(--text);
+}
+
+.tabs{
+display: flex;
+gap: 8px;
+margin-bottom: 16px;
+border-bottom: 1px solid var(--border);
+}
+
+.tab{
+padding: 10px 16px;
+background: transparent;
+border: none;
+border-bottom: 2px solid transparent;
+cursor: pointer;
+font-weight: 500;
+transition: all .15s ease;
+min-height: auto;
+}
+
+.tab.active{
+border-bottom-color: rgba(124, 92, 255, .8);
+color: var(--text);
+}
+
+.tab:hover{
+background: rgba(255,255,255,.05);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<div class="row" style="align-items:center; margin-bottom: 20px;">
+<h1>Study Time Tracker</h1>
+<div class="spacer"></div>
+<button class="btn" id="themeToggle">Toggle theme</button>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+<button class="tab active" data-tab="tracker">Tracker</button>
+<button class="tab" data-tab="calendar">Calendar</button>
+</div>
+
+<!-- Tracker View -->
+<div id="trackerView" class="tabContent">
+<div class="card" style="margin-bottom: 20px;">
+<div class="row" style="align-items:center;">
+<input id="className" placeholder="Add a class (e.g., Calc, Physics, Lit)" style="flex:1; min-width: 240px;" />
+<button class="btn btnPrimary" id="addClassBtn">Add class</button>
+<div class="spacer"></div>
+<div class="small">Week starts Monday.</div>
+</div>
+</div>
+
+<div class="card" style="margin-bottom: 20px;">
+<div style="text-align:center; margin-bottom: 12px;">
+<span class="pill bad" id="statusPill"><span class="dot"></span><span>No active timer</span></span>
+<div class="timerBig mono" id="activeTimerText">00:00:00</div>
+</div>
+<div class="row" style="gap:10px; align-items:center;">
+<div class="meta" id="activeMeta"></div>
+<button class="btn" id="focusOpenBtn" title="Open fullscreen timer" disabled>Focus</button>
+</div>
+</div>
+
+<div class="card" style="margin-bottom: 20px;">
+<h2>Your classes</h2>
+<div class="tableWrap">
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th class="right">Today</th>
+<th class="right">This week</th>
+<th class="right">All time</th>
+<th class="right">Actions</th>
+</tr>
+</thead>
+<tbody id="classTableBody"></tbody>
+</table>
+</div>
+</div>
+
+<div class="card">
+<div class="row" style="justify-content:space-between; align-items:flex-end;">
+<div>
+<h2 style="margin:0; font-size:16px;">Session history</h2>
+<div class="small">Shows exact start/end timestamps for each session.</div>
+</div>
+<div class="row">
+<label class="small" for="filterClass">Filter</label>
+<select id="filterClass">
+<option value="">All classes</option>
+</select>
+</div>
+<div class="actions">
+<button class="btn" id="exportBtn">Export data</button>
+<button class="btn" id="importBtn">Import data</button>
+<button class="btn btnDanger" id="resetBtn">Reset all</button>
+</div>
+</div>
+<div class="tableWrap" style="margin-top: 14px;">
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Start</th>
+<th>End</th>
+<th class="right">Duration</th>
+<th class="right">Actions</th>
+</tr>
+</thead>
+<tbody id="historyBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<!-- Calendar View -->
+<div id="calendarView" class="tabContent" style="display: none;">
+<div class="card" style="margin-bottom: 20px;">
+<div class="row" style="align-items: center; margin-bottom: 12px;">
+<h2 style="margin: 0;">Schedule</h2>
+<div class="spacer"></div>
+<button class="btn btnPrimary" id="addEventBtn">Add Event</button>
+</div>
+<div class="calendar">
+<div class="calendarHeader">
+<button class="btn" id="prevMonth">← Prev</button>
+<div class="calendarTitle" id="calendarTitle">January 2024</div>
+<button class="btn" id="nextMonth">Next →</button>
+</div>
+<div class="calendarGrid" id="calendarGrid"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Upcoming Events</h2>
+<div id="upcomingEvents"></div>
+</div>
+</div>
+
+</div>
+
+<!-- Focus overlay -->
+<div class="focusOverlay" id="focusOverlay">
+<div class="focusTop">
+<span class="pill ok focusClassPill" id="focusClassPill">Studying</span>
+<div>
+<div class="focusDate" id="focusDate"></div>
+<div class="focusClock" id="focusClock"></div>
+</div>
+</div>
+
+<div class="focusTimer mono" id="focusTimer">00:00:00</div>
+
+<div class="focusBottom">
+<button class="btn" id="focusFsBtn" title="Toggle browser fullscreen">Fullscreen</button>
+<button class="btn btnDanger" id="focusExitBtn">Exit</button>
+</div>
+
+<div class="focusHint">Tip: Press <span class="mono">Esc</span> to exit.</div>
+</div>
+
+<!-- Event Modal -->
+<div id="eventModalOverlay" class="modalOverlay" aria-hidden="true">
+<div class="modal">
+<div class="modalHeader">
+<div>
+<h3 class="modalTitle" id="eventModalTitle">Add Event</h3>
+<p class="modalSub">Schedule a study session, class, or other event.</p>
+</div>
+<button class="btn" id="eventModalCloseBtn" title="Close">Close</button>
+</div>
+
+<div class="modalGrid">
+<div>
+<label for="eventTitle">Event Title</label>
+<input id="eventTitle" type="text" placeholder="e.g., Study Calculus" />
+</div>
+
+<div>
+<label for="eventType">Event Type</label>
+<div class="segmented" role="tablist">
+<button id="typeStudy" class="active" type="button" data-type="study">Study</button>
+<button id="typeClass" type="button" data-type="class">Class</button>
+<button id="typeMeeting" type="button" data-type="meeting">Meeting</button>
+<button id="typeOther" type="button" data-type="other">Other</button>
+</div>
+</div>
+
+<div>
+<label for="eventClass">Related Class (optional)</label>
+<select id="eventClass">
+<option value="">None</option>
+</select>
+</div>
+
+<div class="twoCol">
+<div>
+<label for="eventDate">Date</label>
+<input id="eventDate" type="date" />
+</div>
+<div>
+<label for="eventTime">Time</label>
+<input id="eventTime" type="time" />
+</div>
+</div>
+
+<div>
+<label for="eventDuration">Duration (minutes)</label>
+<input id="eventDuration" type="number" min="5" step="5" value="60" />
+</div>
+
+<div>
+<label for="eventNotes">Notes (optional)</label>
+<textarea id="eventNotes" placeholder="Add any additional details..."></textarea>
+</div>
+
+<div>
+<label>
+<input type="checkbox" id="eventRecurring" />
+Recurring event
+</label>
+</div>
+
+<div id="recurringOptions" style="display: none;">
+<label for="eventRecurringType">Repeat</label>
+<select id="eventRecurringType">
+<option value="daily">Daily</option>
+<option value="weekly">Weekly</option>
+<option value="monthly">Monthly</option>
+</select>
+</div>
+
+<div class="row" style="justify-content:space-between;">
+<button class="btn btnDanger" id="eventDeleteBtn" style="display: none;">Delete Event</button>
+<div class="spacer"></div>
+<button class="btn btnPrimary" id="eventSaveBtn">Save Event</button>
+</div>
+</div>
+</div>
+</div>
+
+<input type="file" id="importFile" accept=".json" style="display:none;" />
+
+<script>
+(() => {
+const STORAGE_KEY = "study_time_tracker_v1";
+
+// Utility functions
+const fmtTime = (ms) => {
+const s = Math.floor(ms / 1000);
+const m = Math.floor(s / 60);
+const h = Math.floor(m / 60);
+return `${h}h ${m % 60}m`;
+};
+
+const fmtHMS = (ms) => {
+const s = Math.floor(ms / 1000);
+const h = Math.floor(s / 3600);
+const m = Math.floor((s % 3600) / 60);
+const sec = s % 60;
+return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+};
+
+const toISO = (d) => new Date(d).toISOString();
+const fromISO = (s) => new Date(s);
+
+const startOfDay = (d = new Date()) => {
+const x = new Date(d);
+x.setHours(0,0,0,0);
+return x;
+};
+
+const startOfWeek = (d = new Date()) => {
+const x = startOfDay(d);
+const day = x.getDay();
+const diff = day === 0 ? -6 : 1 - day;
+x.setDate(x.getDate() + diff);
+return x;
+};
+
+const msBetween = (a, b) => Math.max(0, b.getTime() - a.getTime());
+
+const overlapMs = (aStart, aEnd, bStart, bEnd) => {
+const start = Math.max(aStart.getTime(), bStart.getTime());
+const end = Math.min(aEnd.getTime(), bEnd.getTime());
+return Math.max(0, end - start);
+};
+
+const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
+
+const download = (filename, text) => {
+const a = document.createElement("a");
+a.href = URL.createObjectURL(new Blob([text], {type: "application/json"}));
+a.download = filename;
+document.body.appendChild(a);
+a.click();
+a.remove();
+};
+
+const escapeHTML = (str) =>
+String(str).replace(/[&<>"']/g, (c) => ({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+}[c]));
+
+// State
+const defaultState = { 
+classes: [], 
+active: null, 
+sessions: [],
+events: []
+};
+
+const loadState = () => {
+try {
+const raw = localStorage.getItem(STORAGE_KEY);
+if (!raw) return structuredClone(defaultState);
+const parsed = JSON.parse(raw);
+return { ...structuredClone(defaultState), ...parsed };
+} catch {
+return structuredClone(defaultState);
+}
+};
+
+let state = loadState();
+const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+// DOM elements
+const els = {
+className: document.getElementById("className"),
+addClassBtn: document.getElementById("addClassBtn"),
+classTableBody: document.getElementById("classTableBody"),
+filterClass: document.getElementById("filterClass"),
+historyBody: document.getElementById("historyBody"),
+exportBtn: document.getElementById("exportBtn"),
+importBtn: document.getElementById("importBtn"),
+importFile: document.getElementById("importFile"),
+resetBtn: document.getElementById("resetBtn"),
+themeToggle: document.getElementById("themeToggle"),
+statusPill: document.getElementById("statusPill"),
+activeTimerText: document.getElementById("activeTimerText"),
+activeMeta: document.getElementById("activeMeta"),
+focusOpenBtn: document.getElementById("focusOpenBtn"),
+focusOverlay: document.getElementById("focusOverlay"),
+focusClassPill: document.getElementById("focusClassPill"),
+focusTimer: document.getElementById("focusTimer"),
+focusDate: document.getElementById("focusDate"),
+focusClock: document.getElementById("focusClock"),
+focusExitBtn: document.getElementById("focusExitBtn"),
+focusFsBtn: document.getElementById("focusFsBtn"),
+
+// Calendar elements
+calendarGrid: document.getElementById("calendarGrid"),
+calendarTitle: document.getElementById("calendarTitle"),
+prevMonth: document.getElementById("prevMonth"),
+nextMonth: document.getElementById("nextMonth"),
+addEventBtn: document.getElementById("addEventBtn"),
+upcomingEvents: document.getElementById("upcomingEvents"),
+
+// Event modal
+eventModalOverlay: document.getElementById("eventModalOverlay"),
+eventModalTitle: document.getElementById("eventModalTitle"),
+eventModalCloseBtn: document.getElementById("eventModalCloseBtn"),
+eventTitle: document.getElementById("eventTitle"),
+eventType: document.getElementById("eventType"),
+eventClass: document.getElementById("eventClass"),
+eventDate: document.getElementById("eventDate"),
+eventTime: document.getElementById("eventTime"),
+eventDuration: document.getElementById("eventDuration"),
+eventNotes: document.getElementById("eventNotes"),
+eventRecurring: document.getElementById("eventRecurring"),
+recurringOptions: document.getElementById("recurringOptions"),
+eventRecurringType: document.getElementById("eventRecurringType"),
+eventSaveBtn: document.getElementById("eventSaveBtn"),
+eventDeleteBtn: document.getElementById("eventDeleteBtn"),
+};
+
+// Calendar state
+let currentMonth = new Date();
+let currentEventId = null;
+let currentEventType = "study";
+
+// Core logic
+const getClassById = (id) => state.classes.find(c => c.id === id) || null;
+
+const getActiveElapsedMs = (now = new Date()) => {
+if (!state.active) return 0;
+return msBetween(fromISO(state.active.startISO), now);
+};
+
+function stopActiveTimer(endDate = new Date()) {
+if (!state.active) return;
+const { classId, startISO } = state.active;
+const start = fromISO(startISO);
+const end = new Date(endDate);
+if (end <= start) { state.active = null; saveState(); return; }
+state.sessions.unshift({ id: uid(), classId, startISO: toISO(start), endISO: toISO(end) });
+state.active = null;
+saveState();
+}
+
+function startTimerForClass(classId) {
+if (state.active) stopActiveTimer(new Date());
+state.active = { classId, startISO: toISO(new Date()) };
+saveState();
+}
+
+function deleteClass(classId) {
+if (state.active?.classId === classId) stopActiveTimer(new Date());
+state.sessions = state.sessions.filter(s => s.classId !== classId);
+state.classes = state.classes.filter(c => c.id !== classId);
+state.events = state.events.filter(e => e.classId !== classId);
+saveState();
+}
+
+function deleteSession(sessionId) {
+state.sessions = state.sessions.filter(s => s.id !== sessionId);
+saveState();
+}
+
+function totalsForClass(classId) {
+const now = new Date();
+const dayStart = startOfDay(now);
+const weekStart = startOfWeek(now);
+
+let today = 0, week = 0, all = 0;
+
+for (const s of state.sessions) {
+if (s.classId !== classId) continue;
+const start = fromISO(s.startISO);
+const end = fromISO(s.endISO);
+all += msBetween(start, end);
+today += overlapMs(start, end, dayStart, now);
+week += overlapMs(start, end, weekStart, now);
+}
+
+if (state.active?.classId === classId) {
+const start = fromISO(state.active.startISO);
+const end = now;
+all += msBetween(start, end);
+today += overlapMs(start, end, dayStart, now);
+week += overlapMs(start, end, weekStart, now);
+}
+
+return { today, week, all };
+}
+
+// Calendar functions
+function renderCalendar() {
+const year = currentMonth.getFullYear();
+const month = currentMonth.getMonth();
+const firstDay = new Date(year, month, 1);
+const lastDay = new Date(year, month + 1, 0);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+els.calendarTitle.textContent = firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+els.calendarGrid.innerHTML = '';
+
+// Day headers
+const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+dayNames.forEach(day => {
+const header = document.createElement('div');
+header.className = 'calendarDay calendarDayHeader';
+header.textContent = day;
+els.calendarGrid.appendChild(header);
+});
+
+// Calculate starting day (Monday = 0)
+let startDay = firstDay.getDay() - 1;
+if (startDay < 0) startDay = 6;
+
+// Previous month days
+const prevMonthLastDay = new Date(year, month, 0).getDate();
+for (let i = startDay - 1; i >= 0; i--) {
+const dayNum = prevMonthLastDay - i;
+const cell = createDayCell(new Date(year, month - 1, dayNum), true);
+els.calendarGrid.appendChild(cell);
+}
+
+// Current month days
+for (let day = 1; day <= lastDay.getDate(); day++) {
+const date = new Date(year, month, day);
+const cell = createDayCell(date, false);
+if (date.getTime() === today.getTime()) {
+cell.classList.add('today');
+}
+els.calendarGrid.appendChild(cell);
+}
+
+// Next month days
+const totalCells = els.calendarGrid.children.length - 7; // Subtract headers
+const remainingCells = 42 - totalCells; // 6 weeks * 7 days
+for (let day = 1; day <= remainingCells; day++) {
+const cell = createDayCell(new Date(year, month + 1, day), true);
+els.calendarGrid.appendChild(cell);
+}
+}
+
+function createDayCell(date, otherMonth) {
+const cell = document.createElement('div');
+cell.className = 'calendarDay';
+if (otherMonth) cell.classList.add('otherMonth');
+
+const dayNumber = document.createElement('div');
+dayNumber.className = 'calendarDayNumber';
+dayNumber.textContent = date.getDate();
+cell.appendChild(dayNumber);
+
+const eventsContainer = document.createElement('div');
+eventsContainer.className = 'calendarEvents';
+
+// Get events for this day
+const dayEvents = getEventsForDate(date);
+dayEvents.slice(0, 3).forEach(event => {
+const eventEl = document.createElement('div');
+eventEl.className = `calendarEvent ${event.type}`;
+eventEl.textContent = event.title;
+eventEl.title = `${event.title} at ${event.time}`;
+eventEl.onclick = (e) => {
+e.stopPropagation();
+editEvent(event.id);
+};
+eventsContainer.appendChild(eventEl);
+});
+
+if (dayEvents.length > 3) {
+const more = document.createElement('div');
+more.className = 'calendarEvent';
+more.style.background = 'rgba(255,255,255,.1)';
+more.textContent = `+${dayEvents.length - 3} more`;
+eventsContainer.appendChild(more);
+}
+
+cell.appendChild(eventsContainer);
+
+cell.onclick = () => {
+openEventModal(date);
+};
+
+return cell;
+}
+
+function getEventsForDate(date) {
+const dateStr = date.toISOString().split('T')[0];
+return state.events.filter(event => {
+const eventDate = event.date.split('T')[0];
+return eventDate === dateStr;
+}).sort((a, b) => {
+return new Date(a.date + 'T' + a.time).getTime() - new Date(b.date + 'T' + b.time).getTime();
+});
+}
+
+function renderUpcomingEvents() {
+const now = new Date();
+const upcoming = state.events
+.filter(e => new Date(e.date + 'T' + e.time) >= now)
+.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time))
+.slice(0, 10);
+
+if (upcoming.length === 0) {
+els.upcomingEvents.innerHTML = '<div class="small" style="padding: 12px; color: var(--muted);">No upcoming events.</div>';
+return;
+}
+
+els.upcomingEvents.innerHTML = '';
+upcoming.forEach(event => {
+const eventDiv = document.createElement('div');
+eventDiv.style.cssText = 'padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer;';
+eventDiv.onclick = () => editEvent(event.id);
+
+const eventDate = new Date(event.date + 'T' + event.time);
+const cls = event.classId ? getClassById(event.classId) : null;
+
+eventDiv.innerHTML = `
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+<div style="font-weight: 500;">${escapeHTML(event.title)}</div>
+<span class="pill ${event.type}">${event.type}</span>
+</div>
+<div class="small">
+${eventDate.toLocaleDateString()} at ${event.time}
+${cls ? `• ${escapeHTML(cls.name)}` : ''}
+${event.duration ? `• ${event.duration} min` : ''}
+</div>
+${event.notes ? `<div class="small" style="margin-top: 4px;">${escapeHTML(event.notes)}</div>` : ''}
+`;
+
+els.upcomingEvents.appendChild(eventDiv);
+});
+}
+
+function openEventModal(date = null) {
+currentEventId = null;
+els.eventModalTitle.textContent = 'Add Event';
+els.eventTitle.value = '';
+els.eventDate.value = date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+els.eventTime.value = '09:00';
+els.eventDuration.value = '60';
+els.eventNotes.value = '';
+els.eventRecurring.checked = false;
+els.recurringOptions.style.display = 'none';
+els.eventDeleteBtn.style.display = 'none';
+
+// Update class dropdown
+updateEventClassDropdown();
+
+currentEventType = 'study';
+document.querySelectorAll('.segmented button[data-type]').forEach(btn => {
+btn.classList.toggle('active', btn.dataset.type === 'study');
+});
+
+els.eventModalOverlay.classList.add('show');
+els.eventModalOverlay.setAttribute('aria-hidden', 'false');
+document.body.style.overflow = 'hidden';
+}
+
+function editEvent(eventId) {
+const event = state.events.find(e => e.id === eventId);
+if (!event) return;
+
+currentEventId = eventId;
+els.eventModalTitle.textContent = 'Edit Event';
+els.eventTitle.value = event.title;
+els.eventDate.value = event.date.split('T')[0];
+els.eventTime.value = event.time;
+els.eventDuration.value = event.duration || 60;
+els.eventNotes.value = event.notes || '';
+els.eventRecurring.checked = event.recurring || false;
+els.recurringOptions.style.display = event.recurring ? 'block' : 'none';
+els.eventRecurringType.value = event.recurringType || 'weekly';
+els.eventClass.value = event.classId || '';
+els.eventDeleteBtn.style.display = 'block';
+
+currentEventType = event.type;
+document.querySelectorAll('.segmented button[data-type]').forEach(btn => {
+btn.classList.toggle('active', btn.dataset.type === event.type);
+});
+
+updateEventClassDropdown();
+
+els.eventModalOverlay.classList.add('show');
+els.eventModalOverlay.setAttribute('aria-hidden', 'false');
+document.body.style.overflow = 'hidden';
+}
+
+function closeEventModal() {
+els.eventModalOverlay.classList.remove('show');
+els.eventModalOverlay.setAttribute('aria-hidden', 'true');
+document.body.style.overflow = '';
+currentEventId = null;
+}
+
+function saveEvent() {
+const title = els.eventTitle.value.trim();
+if (!title) {
+alert('Please enter an event title');
+return;
+}
+
+const eventData = {
+id: currentEventId || uid(),
+title,
+type: currentEventType,
+classId: els.eventClass.value || null,
+date: els.eventDate.value,
+time: els.eventTime.value,
+duration: parseInt(els.eventDuration.value) || 60,
+notes: els.eventNotes.value.trim(),
+recurring: els.eventRecurring.checked,
+recurringType: els.eventRecurring.checked ? els.eventRecurringType.value : null
+};
+
+if (currentEventId) {
+const index = state.events.findIndex(e => e.id === currentEventId);
+if (index >= 0) state.events[index] = eventData;
+} else {
+state.events.push(eventData);
+}
+
+saveState();
+closeEventModal();
+renderCalendar();
+renderUpcomingEvents();
+}
+
+function deleteEvent() {
+if (!currentEventId) return;
+if (!confirm('Delete this event?')) return;
+
+state.events = state.events.filter(e => e.id !== currentEventId);
+saveState();
+closeEventModal();
+renderCalendar();
+renderUpcomingEvents();
+}
+
+function updateEventClassDropdown() {
+els.eventClass.innerHTML = '<option value="">None</option>';
+state.classes.forEach(c => {
+const opt = document.createElement('option');
+opt.value = c.id;
+opt.textContent = c.name;
+els.eventClass.appendChild(opt);
+});
+}
+
+// Focus Mode
+function updateFocusUI() {
+if (!state.active) return;
+
+const c = getClassById(state.active.classId);
+const now = new Date();
+
+els.focusClassPill.textContent = `Studying: ${c ? c.name : "Unknown"}`;
+els.focusTimer.textContent = fmtHMS(getActiveElapsedMs(now));
+els.focusDate.textContent = now.toLocaleDateString(undefined, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+els.focusClock.textContent = now.toLocaleTimeString(undefined, { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+}
+
+function openFocusMode() {
+if (!state.active) return;
+els.focusOverlay.classList.add("show");
+updateFocusUI();
+}
+
+function closeFocusMode() {
+els.focusOverlay.classList.remove("show");
+}
+
+async function toggleBrowserFullscreen() {
+try {
+if (!document.fullscreenElement) {
+await document.documentElement.requestFullscreen();
+} else {
+await document.exitFullscreen();
+}
+} catch (_) {
+// Some browsers may block fullscreen without a direct user gesture; ignore.
+}
+}
+
+// Rendering
+function render() {
+// Status
+if (state.active) {
+const c = getClassById(state.active.classId);
+els.statusPill.className = "pill ok";
+els.statusPill.innerHTML = `<span class="dot"></span><span>Tracking: ${escapeHTML(c ? c.name : "Unknown")}</span>`;
+els.activeMeta.textContent = `Started ${fromISO(state.active.startISO).toLocaleString()}`;
+els.activeTimerText.textContent = fmtHMS(getActiveElapsedMs(new Date()));
+els.focusOpenBtn.disabled = false;
+} else {
+els.statusPill.className = "pill bad";
+els.statusPill.innerHTML = `<span class="dot"></span><span>No active timer</span>`;
+els.activeMeta.textContent = "";
+els.activeTimerText.textContent = "00:00:00";
+els.focusOpenBtn.disabled = true;
+}
+
+// Classes table
+els.classTableBody.innerHTML = "";
+if (state.classes.length === 0) {
+const tr = document.createElement("tr");
+tr.innerHTML = `<td colspan="5" class="small" style="padding:16px; color: var(--muted);">No classes yet. Add one above!</td>`;
+els.classTableBody.appendChild(tr);
+} else {
+for (const c of state.classes) {
+const totals = totalsForClass(c.id);
+const isActive = state.active?.classId === c.id;
+
+const tr = document.createElement("tr");
+tr.innerHTML = `
+<td><strong>${escapeHTML(c.name)}</strong></td>
+<td class="right mono">${fmtTime(totals.today)}</td>
+<td class="right mono">${fmtTime(totals.week)}</td>
+<td class="right mono">${fmtTime(totals.all)}</td>
+<td class="right">
+<div class="actions">
+<button class="btn ${isActive ? "btnDanger" : "btnPrimary"}" data-action="toggle" data-id="${c.id}">
+${isActive ? "Stop" : "Start"}
+</button>
+<button class="btn" data-action="rename" data-id="${c.id}">Rename</button>
+<button class="btn btnDanger" data-action="delete" data-id="${c.id}">Delete</button>
+</div>
+</td>
+`;
+els.classTableBody.appendChild(tr);
+}
+}
+
+// Filter dropdown
+const prevVal = els.filterClass.value;
+els.filterClass.innerHTML = `<option value="">All classes</option>`;
+for (const c of state.classes) {
+const opt = document.createElement("option");
+opt.value = c.id;
+opt.textContent = c.name;
+els.filterClass.appendChild(opt);
+}
+els.filterClass.value = prevVal;
+
+// History table
+els.historyBody.innerHTML = "";
+const filterVal = els.filterClass.value;
+const sessions = filterVal ? state.sessions.filter(s => s.classId === filterVal) : state.sessions;
+
+if (sessions.length === 0) {
+const tr = document.createElement("tr");
+tr.innerHTML = `<td colspan="5" class="small" style="padding:16px; color: var(--muted);">No sessions yet.</td>`;
+els.historyBody.appendChild(tr);
+} else {
+for (const s of sessions) {
+const c = getClassById(s.classId);
+const start = fromISO(s.startISO);
+const end = fromISO(s.endISO);
+const dur = msBetween(start, end);
+
+const tr = document.createElement("tr");
+tr.innerHTML = `
+<td>${escapeHTML(c ? c.name : "Unknown")}</td>
+<td class="small">${start.toLocaleString()}</td>
+<td class="small">${end.toLocaleString()}</td>
+<td class="right mono">${fmtHMS(dur)}</td>
+<td class="right">
+<button class="btn btnDanger" data-action="delete-session" data-id="${s.id}">Delete</button>
+</td>
+`;
+els.historyBody.appendChild(tr);
+}
+}
+}
+
+// Events
+els.addClassBtn.addEventListener("click", () => {
+const name = els.className.value.trim();
+if (!name) return;
+state.classes.push({ id: uid(), name });
+saveState();
+render();
+renderCalendar();
+renderUpcomingEvents();
+els.className.value = "";
+});
+
+els.className.addEventListener("keydown", (e) => {
+if (e.key === "Enter") els.addClassBtn.click();
+});
+
+els.classTableBody.addEventListener("click", (e) => {
+const btn = e.target.closest("button");
+if (!btn) return;
+
+const action = btn.dataset.action;
+const id = btn.dataset.id;
+
+if (action === "toggle") {
+if (state.active?.classId === id) stopActiveTimer(new Date());
+else startTimerForClass(id);
+render();
+}
+
+if (action === "rename") {
+const c = getClassById(id);
+if (!c) return;
+const newName = prompt("New name:", c.name);
+const trimmed = (newName || "").trim();
+if (!trimmed) return;
+c.name = trimmed;
+saveState();
+render();
+}
+
+if (action === "delete") {
+const c = getClassById(id);
+if (!c) return;
+if (!confirm(`Delete "${c.name}" and all its sessions?`)) return;
+deleteClass(id);
+render();
+renderCalendar();
+renderUpcomingEvents();
+}
+});
+
+els.historyBody.addEventListener("click", (e) => {
+const btn = e.target.closest("button");
+if (!btn) return;
+
+if (btn.dataset.action === "delete-session") {
+deleteSession(btn.dataset.id);
+render();
+}
+});
+
+els.filterClass.addEventListener("change", () => {
+render();
+});
+
+els.exportBtn.addEventListener("click", () => {
+const payload = JSON.stringify(state, null, 2);
+download(`study-tracker-export-${new Date().toISOString().slice(0,10)}.json`, payload);
+});
+
+els.importBtn.addEventListener("click", () => {
+els.importFile.click();
+});
+
+els.importFile.addEventListener("change", async (e) => {
+const file = e.target.files[0];
+if (!file) return;
+try {
+const text = await file.text();
+const parsed = JSON.parse(text);
+if (!parsed || typeof parsed !== "object") throw new Error("Invalid file.");
+if (!Array.isArray(parsed.classes) || !Array.isArray(parsed.sessions)) throw new Error("Invalid structure.");
+
+if (state.active) stopActiveTimer(new Date());
+state = { ...structuredClone(defaultState), ...parsed };
+if (!state.events) state.events = [];
+saveState();
+render();
+renderCalendar();
+renderUpcomingEvents();
+alert("Data imported successfully!");
+} catch (err) {
+alert("Import failed: " + err.message);
+}
+els.importFile.value = "";
+});
+
+els.resetBtn.addEventListener("click", () => {
+if (!confirm("Reset all data? This cannot be undone.")) return;
+state = structuredClone(defaultState);
+saveState();
+render();
+renderCalendar();
+renderUpcomingEvents();
+});
+
+els.themeToggle.addEventListener("click", () => {
+const html = document.documentElement;
+const current = html.getAttribute("data-theme");
+html.setAttribute("data-theme", current === "light" ? "" : "light");
+});
+
+// Focus mode controls
+els.focusOpenBtn.addEventListener("click", openFocusMode);
+els.focusExitBtn.addEventListener("click", closeFocusMode);
+els.focusFsBtn.addEventListener("click", toggleBrowserFullscreen);
+
+document.addEventListener("keydown", (e) => {
+if (e.key === "Escape" && els.focusOverlay.classList.contains("show")) {
+closeFocusMode();
+}
+});
+
+// Timer tick
+setInterval(() => {
+if (!state.active) return;
+
+els.activeTimerText.textContent = fmtHMS(getActiveElapsedMs(new Date()));
+if (els.focusOverlay.classList.contains("show")) updateFocusUI();
+}, 1000);
+
+// Stop timer automatically when tab closes
+window.addEventListener("beforeunload", () => {
+if (state.active) {
+stopActiveTimer(new Date());
+saveState();
+}
+});
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+tab.addEventListener('click', () => {
+const targetTab = tab.dataset.tab;
+document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+tab.classList.add('active');
+
+document.getElementById('trackerView').style.display = targetTab === 'tracker' ? 'block' : 'none';
+document.getElementById('calendarView').style.display = targetTab === 'calendar' ? 'block' : 'none';
+
+if (targetTab === 'calendar') {
+renderCalendar();
+renderUpcomingEvents();
+}
+});
+});
+
+// Calendar navigation
+els.prevMonth.addEventListener('click', () => {
+currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1);
+renderCalendar();
+});
+
+els.nextMonth.addEventListener('click', () => {
+currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
+renderCalendar();
+});
+
+// Event modal
+els.addEventBtn.addEventListener('click', () => openEventModal());
+els.eventModalCloseBtn.addEventListener('click', closeEventModal);
+els.eventSaveBtn.addEventListener('click', saveEvent);
+els.eventDeleteBtn.addEventListener('click', deleteEvent);
+
+document.querySelectorAll('.segmented button[data-type]').forEach(btn => {
+btn.addEventListener('click', () => {
+currentEventType = btn.dataset.type;
+document.querySelectorAll('.segmented button[data-type]').forEach(b => b.classList.remove('active'));
+btn.classList.add('active');
+});
+});
+
+els.eventRecurring.addEventListener('change', () => {
+els.recurringOptions.style.display = els.eventRecurring.checked ? 'block' : 'none';
+});
+
+// Initial render
+render();
+renderCalendar();
+renderUpcomingEvents();
+})();
+</script>
+</body>
+</html>
