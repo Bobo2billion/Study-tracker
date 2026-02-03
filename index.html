@@ -3,45 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Study Time Tracker with Calendar</title>
+<title>Study Time Tracker</title>
 <style>
 :root{
---bg:#141823;
---text:#e8eaf0;
---muted:#9ca3b8;
---muted2:#6b7280;
---border:rgba(255,255,255,.08);
---panel:rgba(255,255,255,.04);
---panel2:rgba(255,255,255,.07);
---shadow:0 8px 32px rgba(0,0,0,.4);
---focus:0 0 0 3px rgba(145, 180, 255, .18);
+--bg: #2f2f2f;
+--bg-secondary: #3a3a3a;
+--text: #ebebeb;
+--text-secondary: #b4b4b4;
+--muted: #8e8e8e;
+--border: rgba(255,255,255,.12);
+--panel: #3a3a3a;
+--panel-hover: #424242;
+--shadow: 0 4px 24px rgba(0,0,0,.3);
+--focus: 0 0 0 3px rgba(139, 92, 246, .25);
 --mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace;
---good: rgba(98, 219, 143, .16);
---goodBorder: rgba(98, 219, 143, .30);
---bad: rgba(255, 123, 123, .14);
---badBorder: rgba(255, 123, 123, .26);
---accent: rgba(124, 92, 255, .30);
---accentBorder: rgba(124, 92, 255, .45);
+
+/* Primary colors - Purple/Violet theme */
+--primary: #8b5cf6;
+--primary-light: #a78bfa;
+--primary-dark: #7c3aed;
+--primary-bg: rgba(139, 92, 246, .15);
+--primary-border: rgba(139, 92, 246, .3);
+
+/* Status colors */
+--success: #10b981;
+--success-bg: rgba(16, 185, 129, .15);
+--success-border: rgba(16, 185, 129, .3);
+
+--danger: #ef4444;
+--danger-bg: rgba(239, 68, 68, .15);
+--danger-border: rgba(239, 68, 68, .3);
+
+--warning: #f59e0b;
+--warning-bg: rgba(245, 158, 11, .15);
+--warning-border: rgba(245, 158, 11, .3);
+
+--info: #3b82f6;
+--info-bg: rgba(59, 130, 246, .15);
+--info-border: rgba(59, 130, 246, .3);
 }
+
 [data-theme="light"]{
---bg:#f6f7fb;
---text:#1a1d2e;
---muted:#4b5563;
---muted2:#6b7280;
---border:rgba(0,0,0,.08);
---panel:rgba(255,255,255,.70);
---panel2:rgba(255,255,255,.90);
---shadow:0 8px 32px rgba(0,0,0,.08);
---focus:0 0 0 3px rgba(124, 92, 255, .12);
---good: rgba(26, 165, 78, .12);
---goodBorder: rgba(26, 165, 78, .22);
---bad: rgba(220, 66, 66, .08);
---badBorder: rgba(220, 66, 66, .18);
---accent: rgba(124, 92, 255, .16);
---accentBorder: rgba(124, 92, 255, .28);
+--bg: #f5f5f5;
+--bg-secondary: #ffffff;
+--text: #1a1a1a;
+--text-secondary: #525252;
+--muted: #737373;
+--border: rgba(0,0,0,.1);
+--panel: #ffffff;
+--panel-hover: #f9f9f9;
+--shadow: 0 4px 24px rgba(0,0,0,.08);
+--focus: 0 0 0 3px rgba(139, 92, 246, .15);
+
+--primary: #8b5cf6;
+--primary-light: #a78bfa;
+--primary-dark: #7c3aed;
+--primary-bg: rgba(139, 92, 246, .1);
+--primary-border: rgba(139, 92, 246, .25);
+
+--success: #059669;
+--success-bg: rgba(16, 185, 129, .1);
+--success-border: rgba(16, 185, 129, .25);
+
+--danger: #dc2626;
+--danger-bg: rgba(239, 68, 68, .1);
+--danger-border: rgba(239, 68, 68, .25);
+
+--warning: #d97706;
+--warning-bg: rgba(245, 158, 11, .1);
+--warning-border: rgba(245, 158, 11, .25);
+
+--info: #2563eb;
+--info-bg: rgba(59, 130, 246, .1);
+--info-border: rgba(59, 130, 246, .25);
 }
 
 *{ box-sizing:border-box; }
+
 html, body{
 margin:0;
 padding:0;
@@ -50,30 +88,39 @@ background: var(--bg);
 color: var(--text);
 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 -webkit-font-smoothing: antialiased;
+transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container{
 max-width: 1400px;
 margin: 0 auto;
-padding: 20px;
+padding: 24px;
 }
 
 h1{
-margin: 0 0 20px;
-font-size: 26px;
+margin: 0 0 24px;
+font-size: 28px;
+font-weight: 700;
 letter-spacing: -.5px;
+background: linear-gradient(135deg, var(--primary), var(--primary-light));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
 }
 
 h2{
-margin: 0 0 12px;
+margin: 0 0 16px;
 font-size: 18px;
+font-weight: 600;
 letter-spacing: -.3px;
+color: var(--text);
 }
 
 .row{
 display:flex;
 gap:12px;
 flex-wrap: wrap;
+align-items: center;
 }
 
 .spacer{ flex:1; }
@@ -87,9 +134,10 @@ color: var(--muted);
 
 label{
 display:block;
-margin-bottom: 5px;
+margin-bottom: 6px;
 font-size: 13px;
-color: var(--muted);
+font-weight: 500;
+color: var(--text-secondary);
 }
 
 input, select, button, textarea{
@@ -99,84 +147,93 @@ color: var(--text);
 }
 
 input, select, textarea{
-background: rgba(255,255,255,.06);
+background: var(--bg-secondary);
 border: 1px solid var(--border);
-border-radius: 12px;
-padding: 10px 12px;
+border-radius: 10px;
+padding: 11px 14px;
 outline: none;
-min-height: 40px;
+min-height: 42px;
+transition: all 0.2s ease;
 }
 
-textarea{ min-height: 110px; resize: vertical; }
+textarea{ min-height: 120px; resize: vertical; }
 
-[data-theme="light"] input,
-[data-theme="light"] select,
-[data-theme="light"] textarea{
-background: rgba(255,255,255,.80);
+input:hover, select:hover, textarea:hover{
+border-color: rgba(139, 92, 246, .3);
 }
 
 input:focus, select:focus, textarea:focus{
 box-shadow: var(--focus);
-border-color: rgba(145, 180, 255, .35);
+border-color: var(--primary);
 }
 
 button{
-background: rgba(255,255,255,.08);
+background: var(--panel);
 border: 1px solid var(--border);
-border-radius: 12px;
-padding: 10px 16px;
-cursor:pointer;
-transition: all .15s ease;
-min-height: 40px;
+border-radius: 10px;
+padding: 11px 18px;
+cursor: pointer;
+transition: all 0.2s ease;
+min-height: 42px;
+font-weight: 500;
 }
 
 button:hover{
-background: rgba(255,255,255,.12);
-border-color: rgba(255,255,255,.12);
+background: var(--panel-hover);
+border-color: rgba(255,255,255,.15);
+transform: translateY(-1px);
+}
+
+button:active{
+transform: translateY(0);
 }
 
 button:disabled{
 opacity: .5;
 cursor: not-allowed;
+transform: none !important;
 }
 
 .btn{ /* same as button */ }
 
 .btnPrimary{
-background: rgba(124, 92, 255, .22);
-border-color: rgba(124, 92, 255, .35);
-color: var(--text);
-font-weight: 500;
+background: var(--primary);
+border-color: var(--primary);
+color: white;
+font-weight: 600;
 }
 
 .btnPrimary:hover{
-background: rgba(124, 92, 255, .32);
-border-color: rgba(124, 92, 255, .45);
+background: var(--primary-light);
+border-color: var(--primary-light);
 }
 
 .btnDanger{
-background: rgba(255, 123, 123, .16);
-border-color: rgba(255, 123, 123, .28);
-color: var(--text);
-font-weight: 500;
+background: var(--danger-bg);
+border-color: var(--danger-border);
+color: var(--danger);
+font-weight: 600;
 }
 
 .btnDanger:hover{
-background: rgba(255, 123, 123, .26);
-border-color: rgba(255, 123, 123, .40);
+background: var(--danger);
+border-color: var(--danger);
+color: white;
 }
 
 .card{
-background: linear-gradient(135deg, var(--panel2), var(--panel));
+background: var(--panel);
 border: 1px solid var(--border);
-border-radius: 18px;
-padding: 18px;
+border-radius: 16px;
+padding: 24px;
 box-shadow: var(--shadow);
+margin-bottom: 24px;
+transition: all 0.3s ease;
 }
 
 .actions{
 display:flex;
-gap:8px;
+gap:10px;
 flex-wrap: wrap;
 }
 
@@ -185,35 +242,77 @@ flex-wrap: wrap;
 .pill{
 display:inline-flex;
 align-items:center;
-gap:6px;
-padding: 6px 12px;
+gap:8px;
+padding: 8px 14px;
 border-radius: 999px;
 border: 1px solid var(--border);
-background: rgba(255,255,255,.06);
+background: var(--bg-secondary);
 font-size: 13px;
-font-weight: 500;
+font-weight: 600;
 white-space: nowrap;
+transition: all 0.2s ease;
 }
 
-.pill.ok{ background: var(--good); border-color: var(--goodBorder); color: var(--text); }
-.pill.bad{ background: var(--bad); border-color: var(--badBorder); color: var(--text); }
-.pill.accent{ background: var(--accent); border-color: var(--accentBorder); color: var(--text); }
+.pill.ok{ 
+background: var(--success-bg); 
+border-color: var(--success-border); 
+color: var(--success); 
+}
+
+.pill.bad{ 
+background: var(--danger-bg); 
+border-color: var(--danger-border); 
+color: var(--danger); 
+}
+
+.pill.accent{ 
+background: var(--primary-bg); 
+border-color: var(--primary-border); 
+color: var(--primary); 
+}
+
+.pill.study{ 
+background: var(--success-bg); 
+border-color: var(--success-border); 
+color: var(--success); 
+}
+
+.pill.class{ 
+background: var(--primary-bg); 
+border-color: var(--primary-border); 
+color: var(--primary); 
+}
+
+.pill.meeting{ 
+background: var(--warning-bg); 
+border-color: var(--warning-border); 
+color: var(--warning); 
+}
+
+.pill.other{ 
+background: var(--info-bg); 
+border-color: var(--info-border); 
+color: var(--info); 
+}
 
 .dot{
-width: 8px; height: 8px; border-radius: 50%;
-background: rgba(255,255,255,.55);
+width: 8px; 
+height: 8px; 
+border-radius: 50%;
+background: currentColor;
+opacity: 0.8;
 }
-
-.pill.ok .dot{ background: rgba(98, 219, 143, .95); }
-.pill.bad .dot{ background: rgba(255, 123, 123, .95); }
-.pill.accent .dot{ background: rgba(124, 92, 255, .95); }
 
 .timerBig{
 font-family: var(--mono);
-font-size: 48px;
-font-weight: 600;
-letter-spacing: -1px;
-margin: 8px 0;
+font-size: 56px;
+font-weight: 700;
+letter-spacing: -2px;
+margin: 12px 0;
+background: linear-gradient(135deg, var(--primary), var(--primary-light));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
 }
 
 .meta{
@@ -225,12 +324,11 @@ table{
 width:100%;
 border-collapse: collapse;
 min-width: 780px;
-background: rgba(255,255,255,.03);
 }
 
 th, td{
 text-align: left;
-padding: 12px;
+padding: 14px 16px;
 border-bottom: 1px solid var(--border);
 }
 
@@ -238,15 +336,28 @@ th{
 font-weight: 600;
 font-size: 12px;
 text-transform: uppercase;
-letter-spacing: .5px;
+letter-spacing: .8px;
 color: var(--muted);
+background: var(--bg-secondary);
+}
+
+tr:last-child td{
+border-bottom: none;
+}
+
+tbody tr{
+transition: background 0.2s ease;
+}
+
+tbody tr:hover{
+background: var(--panel-hover);
 }
 
 .tableWrap{
 overflow-x: auto;
-border-radius: 14px;
+border-radius: 12px;
 border: 1px solid var(--border);
-background: rgba(255,255,255,.03);
+background: var(--panel);
 }
 
 /* Focus overlay */
@@ -259,7 +370,8 @@ display: none;
 flex-direction: column;
 align-items: center;
 justify-content: center;
-gap: 22px;
+gap: 32px;
+padding: 40px;
 }
 
 .focusOverlay.show{ display:flex; }
@@ -270,35 +382,41 @@ display:flex;
 justify-content: space-between;
 align-items: center;
 flex-wrap: wrap;
-gap: 12px;
+gap: 16px;
 }
 
 .focusClassPill{
-font-size: 15px;
-padding: 8px 16px;
+font-size: 16px;
+padding: 10px 20px;
 }
 
 .focusTimer{
-font-size: 120px;
+font-size: 140px;
 font-weight: 700;
-letter-spacing: -3px;
+letter-spacing: -6px;
+background: linear-gradient(135deg, var(--primary), var(--primary-light));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+text-shadow: 0 4px 20px rgba(139, 92, 246, .3);
 }
 
 .focusBottom{
 display:flex;
-gap:12px;
+gap:16px;
 flex-wrap: wrap;
 }
 
 .focusDate, .focusClock{
 font-size: 16px;
-color: var(--muted);
+color: var(--text-secondary);
+font-weight: 500;
 }
 
 .focusHint{
-margin-top: 12px;
-color: var(--muted2);
-font-size: 12px;
+margin-top: 16px;
+color: var(--muted);
+font-size: 13px;
 }
 
 /* Modal */
@@ -307,60 +425,78 @@ position: fixed;
 inset: 0;
 display: none;
 z-index: 10000;
-background: rgba(0,0,0,.55);
-backdrop-filter: blur(10px);
-padding: 18px;
+background: rgba(0,0,0,.6);
+backdrop-filter: blur(12px);
+padding: 24px;
 }
 
-[data-theme="light"] .modalOverlay{
-background: rgba(20,24,35,.25);
+.modalOverlay.show{ 
+display:flex; 
+align-items:center; 
+justify-content:center;
+animation: fadeIn 0.2s ease;
 }
 
-.modalOverlay.show{ display:flex; align-items:center; justify-content:center; }
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
 
 .modal{
 width: min(680px, 100%);
 max-height: 90vh;
 overflow-y: auto;
-background: linear-gradient(180deg, var(--panel2), var(--panel));
+background: var(--panel);
 border: 1px solid var(--border);
-border-radius: 18px;
-box-shadow: var(--shadow);
-padding: 16px;
+border-radius: 16px;
+box-shadow: 0 20px 60px rgba(0,0,0,.4);
+padding: 24px;
+animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+from { 
+opacity: 0;
+transform: translateY(20px);
+}
+to { 
+opacity: 1;
+transform: translateY(0);
+}
 }
 
 .modalHeader{
 display:flex;
 align-items:flex-start;
 justify-content: space-between;
-gap: 10px;
-margin-bottom: 10px;
+gap: 16px;
+margin-bottom: 20px;
 }
 
 .modalTitle{
 margin: 0;
-font-size: 15px;
-letter-spacing: .2px;
+font-size: 18px;
+font-weight: 700;
+letter-spacing: -.3px;
 }
 
 .modalSub{
-margin: 6px 0 0;
+margin: 8px 0 0;
 color: var(--muted);
-font-size: 12px;
-line-height: 1.35;
+font-size: 13px;
+line-height: 1.5;
 }
 
 .modalGrid{
 display:grid;
 grid-template-columns: 1fr;
-gap: 10px;
-margin-top: 10px;
+gap: 16px;
 }
 
 .twoCol{
 display:grid;
 grid-template-columns: 1fr 1fr;
-gap: 10px;
+gap: 12px;
 }
 
 @media (max-width: 560px){
@@ -369,9 +505,9 @@ gap: 10px;
 
 /* Calendar styles */
 .calendar{
-background: rgba(255,255,255,.03);
+background: var(--panel);
 border: 1px solid var(--border);
-border-radius: 14px;
+border-radius: 12px;
 overflow: hidden;
 }
 
@@ -379,19 +515,20 @@ overflow: hidden;
 display: flex;
 justify-content: space-between;
 align-items: center;
-padding: 16px;
-background: rgba(255,255,255,.05);
+padding: 20px;
+background: var(--bg-secondary);
 border-bottom: 1px solid var(--border);
 }
 
 .calendarTitle{
-font-size: 16px;
-font-weight: 600;
+font-size: 18px;
+font-weight: 700;
+color: var(--text);
 }
 
 .calendarNav{
 display: flex;
-gap: 8px;
+gap: 10px;
 }
 
 .calendarGrid{
@@ -402,181 +539,300 @@ grid-template-columns: repeat(7, 1fr);
 .calendarDay{
 aspect-ratio: 1;
 border: 1px solid var(--border);
-padding: 8px;
+padding: 10px;
 cursor: pointer;
-transition: background .15s ease;
+transition: all 0.2s ease;
 position: relative;
-min-height: 80px;
+min-height: 90px;
+background: var(--panel);
 }
 
 .calendarDay:hover{
-background: rgba(255,255,255,.06);
+background: var(--panel-hover);
+border-color: var(--primary-border);
 }
 
 .calendarDay.otherMonth{
-opacity: 0.4;
+opacity: 0.3;
 }
 
 .calendarDay.today{
-background: rgba(124, 92, 255, .1);
+background: var(--primary-bg);
+border-color: var(--primary-border);
 }
 
 .calendarDayNumber{
-font-size: 13px;
-font-weight: 600;
-margin-bottom: 4px;
+font-size: 14px;
+font-weight: 700;
+margin-bottom: 6px;
+color: var(--text);
+}
+
+.calendarDay.otherMonth .calendarDayNumber{
+color: var(--muted);
 }
 
 .calendarDayHeader{
 aspect-ratio: unset;
 min-height: unset;
-padding: 12px 8px;
+padding: 16px 10px;
 font-size: 12px;
-font-weight: 600;
+font-weight: 700;
 text-transform: uppercase;
+letter-spacing: .8px;
 color: var(--muted);
 text-align: center;
 cursor: default;
+background: var(--bg-secondary);
+border: 1px solid var(--border);
 }
 
 .calendarDayHeader:hover{
-background: transparent;
+background: var(--bg-secondary);
+border-color: var(--border);
 }
 
 .calendarEvents{
 display: flex;
 flex-direction: column;
-gap: 2px;
+gap: 3px;
 }
 
 .calendarEvent{
 font-size: 11px;
-padding: 2px 4px;
-border-radius: 4px;
+padding: 3px 6px;
+border-radius: 6px;
 overflow: hidden;
 text-overflow: ellipsis;
 white-space: nowrap;
 cursor: pointer;
+font-weight: 600;
+transition: all 0.2s ease;
+}
+
+.calendarEvent:hover{
+transform: translateX(2px);
 }
 
 .calendarEvent.study{
-background: rgba(98, 219, 143, .25);
-border-left: 2px solid rgba(98, 219, 143, .8);
+background: var(--success-bg);
+border-left: 3px solid var(--success);
+color: var(--success);
 }
 
 .calendarEvent.class{
-background: rgba(124, 92, 255, .25);
-border-left: 2px solid rgba(124, 92, 255, .8);
+background: var(--primary-bg);
+border-left: 3px solid var(--primary);
+color: var(--primary);
 }
 
 .calendarEvent.meeting{
-background: rgba(255, 180, 50, .25);
-border-left: 2px solid rgba(255, 180, 50, .8);
+background: var(--warning-bg);
+border-left: 3px solid var(--warning);
+color: var(--warning);
 }
 
 .calendarEvent.other{
-background: rgba(100, 150, 255, .25);
-border-left: 2px solid rgba(100, 150, 255, .8);
+background: var(--info-bg);
+border-left: 3px solid var(--info);
+color: var(--info);
 }
 
 .segmented{
 display:flex;
 border: 1px solid var(--border);
-border-radius: 12px;
+border-radius: 10px;
 overflow:hidden;
-background: rgba(255,255,255,.05);
+background: var(--bg-secondary);
+padding: 4px;
+gap: 4px;
 }
 
 .segmented button{
 flex:1;
 border:0;
 background: transparent;
-padding: 10px 12px;
+padding: 10px 14px;
 cursor:pointer;
 color: var(--muted);
-transition: background .15s ease, color .15s ease;
+transition: all 0.2s ease;
+border-radius: 8px;
+font-weight: 600;
 }
 
 .segmented button.active{
-background: rgba(124, 92, 255, .22);
+background: var(--primary);
+color: white;
+}
+
+.segmented button:hover:not(.active){
+background: var(--panel-hover);
 color: var(--text);
 }
 
 .tabs{
 display: flex;
-gap: 8px;
-margin-bottom: 16px;
-border-bottom: 1px solid var(--border);
+gap: 4px;
+margin-bottom: 24px;
+background: var(--panel);
+padding: 6px;
+border-radius: 12px;
+border: 1px solid var(--border);
 }
 
 .tab{
-padding: 10px 16px;
+padding: 10px 24px;
 background: transparent;
 border: none;
-border-bottom: 2px solid transparent;
 cursor: pointer;
-font-weight: 500;
-transition: all .15s ease;
+font-weight: 600;
+transition: all 0.2s ease;
 min-height: auto;
+border-radius: 8px;
+color: var(--muted);
 }
 
 .tab.active{
-border-bottom-color: rgba(124, 92, 255, .8);
+background: var(--primary);
+color: white;
+}
+
+.tab:hover:not(.active){
+background: var(--panel-hover);
 color: var(--text);
 }
 
-.tab:hover{
-background: rgba(255,255,255,.05);
+.themeToggle{
+position: fixed;
+bottom: 24px;
+right: 24px;
+width: 56px;
+height: 56px;
+border-radius: 50%;
+background: var(--primary);
+border: none;
+color: white;
+font-size: 24px;
+cursor: pointer;
+box-shadow: 0 4px 20px rgba(139, 92, 246, .4);
+transition: all 0.3s ease;
+z-index: 1000;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.themeToggle:hover{
+transform: translateY(-4px) scale(1.05);
+box-shadow: 0 8px 30px rgba(139, 92, 246, .5);
+}
+
+.eventCard{
+padding: 16px;
+border-bottom: 1px solid var(--border);
+cursor: pointer;
+transition: all 0.2s ease;
+border-radius: 8px;
+margin-bottom: 4px;
+}
+
+.eventCard:hover{
+background: var(--panel-hover);
+}
+
+.eventCard:last-child{
+border-bottom: none;
+}
+
+.emptyState{
+text-align: center;
+padding: 48px 24px;
+color: var(--muted);
+}
+
+.emptyState svg{
+width: 64px;
+height: 64px;
+margin-bottom: 16px;
+opacity: 0.3;
+}
+
+@media (max-width: 768px) {
+.container{
+padding: 16px;
+}
+  
+h1{
+font-size: 24px;
+}
+  
+.timerBig{
+font-size: 42px;
+}
+  
+.focusTimer{
+font-size: 80px;
+}
+  
+.calendarDay{
+min-height: 70px;
+padding: 6px;
+}
+  
+.calendarDayNumber{
+font-size: 12px;
+}
+  
+.calendarEvent{
+font-size: 10px;
+padding: 2px 4px;
+}
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-<div class="row" style="align-items:center; margin-bottom: 20px;">
-<h1>Study Time Tracker</h1>
-<div class="spacer"></div>
-<button class="btn" id="themeToggle">Toggle theme</button>
+<div class="row" style="margin-bottom: 24px;">
+<h1>✨ Study Time Tracker</h1>
 </div>
 
 <!-- Tabs -->
 <div class="tabs">
-<button class="tab active" data-tab="tracker">Tracker</button>
-<button class="tab" data-tab="calendar">Calendar</button>
+<button class="tab active" data-tab="tracker">📊 Tracker</button>
+<button class="tab" data-tab="calendar">📅 Calendar</button>
 </div>
 
 <!-- Tracker View -->
 <div id="trackerView" class="tabContent">
-<div class="card" style="margin-bottom: 20px;">
-<div class="row" style="align-items:center;">
-<input id="className" placeholder="Add a class (e.g., Calc, Physics, Lit)" style="flex:1; min-width: 240px;" />
-<button class="btn btnPrimary" id="addClassBtn">Add class</button>
-<div class="spacer"></div>
-<div class="small">Week starts Monday.</div>
+<div class="card">
+<div class="row">
+<input id="className" placeholder="Add a class (e.g., Calculus, Physics, Literature)" style="flex:1; min-width: 260px;" />
+<button class="btn btnPrimary" id="addClassBtn">➕ Add Class</button>
 </div>
 </div>
 
-<div class="card" style="margin-bottom: 20px;">
-<div style="text-align:center; margin-bottom: 12px;">
+<div class="card">
+<div style="text-align:center; margin-bottom: 16px;">
 <span class="pill bad" id="statusPill"><span class="dot"></span><span>No active timer</span></span>
 <div class="timerBig mono" id="activeTimerText">00:00:00</div>
-</div>
-<div class="row" style="gap:10px; align-items:center;">
 <div class="meta" id="activeMeta"></div>
-<button class="btn" id="focusOpenBtn" title="Open fullscreen timer" disabled>Focus</button>
+</div>
+<div class="row" style="gap:12px; justify-content: center;">
+<button class="btn" id="focusOpenBtn" title="Open fullscreen timer" disabled>🎯 Focus Mode</button>
 </div>
 </div>
 
-<div class="card" style="margin-bottom: 20px;">
-<h2>Your classes</h2>
+<div class="card">
+<h2>📚 Your Classes</h2>
 <div class="tableWrap">
 <table>
 <thead>
 <tr>
 <th>Class</th>
 <th class="right">Today</th>
-<th class="right">This week</th>
-<th class="right">All time</th>
+<th class="right">This Week</th>
+<th class="right">All Time</th>
 <th class="right">Actions</th>
 </tr>
 </thead>
@@ -586,24 +842,18 @@ background: rgba(255,255,255,.05);
 </div>
 
 <div class="card">
-<div class="row" style="justify-content:space-between; align-items:flex-end;">
+<div class="row" style="justify-content:space-between; align-items:flex-start; margin-bottom: 16px;">
 <div>
-<h2 style="margin:0; font-size:16px;">Session history</h2>
-<div class="small">Shows exact start/end timestamps for each session.</div>
+<h2 style="margin:0;">📝 Session History</h2>
+<div class="small" style="margin-top: 4px;">Track all your study sessions</div>
 </div>
-<div class="row">
-<label class="small" for="filterClass">Filter</label>
-<select id="filterClass">
+<div class="row" style="gap: 8px;">
+<select id="filterClass" style="min-width: 150px;">
 <option value="">All classes</option>
 </select>
 </div>
-<div class="actions">
-<button class="btn" id="exportBtn">Export data</button>
-<button class="btn" id="importBtn">Import data</button>
-<button class="btn btnDanger" id="resetBtn">Reset all</button>
 </div>
-</div>
-<div class="tableWrap" style="margin-top: 14px;">
+<div class="tableWrap">
 <table>
 <thead>
 <tr>
@@ -617,20 +867,24 @@ background: rgba(255,255,255,.05);
 <tbody id="historyBody"></tbody>
 </table>
 </div>
+<div class="row" style="justify-content: flex-end; margin-top: 16px; gap: 8px;">
+<button class="btn" id="exportBtn">💾 Export</button>
+<button class="btn" id="importBtn">📥 Import</button>
+<button class="btn btnDanger" id="resetBtn">🗑️ Reset All</button>
+</div>
 </div>
 </div>
 
 <!-- Calendar View -->
 <div id="calendarView" class="tabContent" style="display: none;">
-<div class="card" style="margin-bottom: 20px;">
-<div class="row" style="align-items: center; margin-bottom: 12px;">
-<h2 style="margin: 0;">Schedule</h2>
-<div class="spacer"></div>
-<button class="btn btnPrimary" id="addEventBtn">Add Event</button>
+<div class="card">
+<div class="row" style="justify-content: space-between; margin-bottom: 20px;">
+<h2 style="margin: 0;">📅 Schedule</h2>
+<button class="btn btnPrimary" id="addEventBtn">➕ Add Event</button>
 </div>
 <div class="calendar">
 <div class="calendarHeader">
-<button class="btn" id="prevMonth">← Prev</button>
+<button class="btn" id="prevMonth">← Previous</button>
 <div class="calendarTitle" id="calendarTitle">January 2024</div>
 <button class="btn" id="nextMonth">Next →</button>
 </div>
@@ -639,7 +893,7 @@ background: rgba(255,255,255,.05);
 </div>
 
 <div class="card">
-<h2>Upcoming Events</h2>
+<h2>🔔 Upcoming Events</h2>
 <div id="upcomingEvents"></div>
 </div>
 </div>
@@ -650,7 +904,7 @@ background: rgba(255,255,255,.05);
 <div class="focusOverlay" id="focusOverlay">
 <div class="focusTop">
 <span class="pill ok focusClassPill" id="focusClassPill">Studying</span>
-<div>
+<div style="text-align: right;">
 <div class="focusDate" id="focusDate"></div>
 <div class="focusClock" id="focusClock"></div>
 </div>
@@ -659,11 +913,11 @@ background: rgba(255,255,255,.05);
 <div class="focusTimer mono" id="focusTimer">00:00:00</div>
 
 <div class="focusBottom">
-<button class="btn" id="focusFsBtn" title="Toggle browser fullscreen">Fullscreen</button>
-<button class="btn btnDanger" id="focusExitBtn">Exit</button>
+<button class="btn" id="focusFsBtn" title="Toggle browser fullscreen">⛶ Fullscreen</button>
+<button class="btn btnDanger" id="focusExitBtn">✕ Exit Focus</button>
 </div>
 
-<div class="focusHint">Tip: Press <span class="mono">Esc</span> to exit.</div>
+<div class="focusHint">Press <span class="mono">Esc</span> to exit focus mode</div>
 </div>
 
 <!-- Event Modal -->
@@ -672,24 +926,24 @@ background: rgba(255,255,255,.05);
 <div class="modalHeader">
 <div>
 <h3 class="modalTitle" id="eventModalTitle">Add Event</h3>
-<p class="modalSub">Schedule a study session, class, or other event.</p>
+<p class="modalSub">Schedule a study session, class, or other event</p>
 </div>
-<button class="btn" id="eventModalCloseBtn" title="Close">Close</button>
+<button class="btn" id="eventModalCloseBtn" title="Close">✕</button>
 </div>
 
 <div class="modalGrid">
 <div>
 <label for="eventTitle">Event Title</label>
-<input id="eventTitle" type="text" placeholder="e.g., Study Calculus" />
+<input id="eventTitle" type="text" placeholder="e.g., Study Calculus Chapter 5" />
 </div>
 
 <div>
 <label for="eventType">Event Type</label>
 <div class="segmented" role="tablist">
-<button id="typeStudy" class="active" type="button" data-type="study">Study</button>
-<button id="typeClass" type="button" data-type="class">Class</button>
-<button id="typeMeeting" type="button" data-type="meeting">Meeting</button>
-<button id="typeOther" type="button" data-type="other">Other</button>
+<button id="typeStudy" class="active" type="button" data-type="study">📖 Study</button>
+<button id="typeClass" type="button" data-type="class">🎓 Class</button>
+<button id="typeMeeting" type="button" data-type="meeting">👥 Meeting</button>
+<button id="typeOther" type="button" data-type="other">📌 Other</button>
 </div>
 </div>
 
@@ -722,9 +976,9 @@ background: rgba(255,255,255,.05);
 </div>
 
 <div>
-<label>
-<input type="checkbox" id="eventRecurring" />
-Recurring event
+<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+<input type="checkbox" id="eventRecurring" style="min-height: auto; width: auto;" />
+<span>Recurring event</span>
 </label>
 </div>
 
@@ -738,13 +992,18 @@ Recurring event
 </div>
 
 <div class="row" style="justify-content:space-between;">
-<button class="btn btnDanger" id="eventDeleteBtn" style="display: none;">Delete Event</button>
+<button class="btn btnDanger" id="eventDeleteBtn" style="display: none;">🗑️ Delete Event</button>
 <div class="spacer"></div>
-<button class="btn btnPrimary" id="eventSaveBtn">Save Event</button>
+<button class="btn btnPrimary" id="eventSaveBtn">💾 Save Event</button>
 </div>
 </div>
 </div>
 </div>
+
+<!-- Theme Toggle Button -->
+<button class="themeToggle" id="themeToggle" title="Toggle theme">
+<span id="themeIcon">☀️</span>
+</button>
 
 <input type="file" id="importFile" accept=".json" style="display:none;" />
 
@@ -814,7 +1073,8 @@ const defaultState = {
 classes: [], 
 active: null, 
 sessions: [],
-events: []
+events: [],
+theme: 'dark'
 };
 
 const loadState = () => {
@@ -831,6 +1091,11 @@ return structuredClone(defaultState);
 let state = loadState();
 const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 
+// Apply theme on load
+if (state.theme === 'light') {
+document.documentElement.setAttribute('data-theme', 'light');
+}
+
 // DOM elements
 const els = {
 className: document.getElementById("className"),
@@ -843,6 +1108,7 @@ importBtn: document.getElementById("importBtn"),
 importFile: document.getElementById("importFile"),
 resetBtn: document.getElementById("resetBtn"),
 themeToggle: document.getElementById("themeToggle"),
+themeIcon: document.getElementById("themeIcon"),
 statusPill: document.getElementById("statusPill"),
 activeTimerText: document.getElementById("activeTimerText"),
 activeMeta: document.getElementById("activeMeta"),
@@ -1034,7 +1300,7 @@ eventsContainer.appendChild(eventEl);
 if (dayEvents.length > 3) {
 const more = document.createElement('div');
 more.className = 'calendarEvent';
-more.style.background = 'rgba(255,255,255,.1)';
+more.style.cssText = 'background: var(--bg-secondary); color: var(--muted); border-left-color: var(--border);';
 more.textContent = `+${dayEvents.length - 3} more`;
 eventsContainer.appendChild(more);
 }
@@ -1066,30 +1332,43 @@ const upcoming = state.events
 .slice(0, 10);
 
 if (upcoming.length === 0) {
-els.upcomingEvents.innerHTML = '<div class="small" style="padding: 12px; color: var(--muted);">No upcoming events.</div>';
+els.upcomingEvents.innerHTML = `
+<div class="emptyState">
+<div style="font-size: 48px; margin-bottom: 12px;">📅</div>
+<div>No upcoming events scheduled</div>
+<div class="small" style="margin-top: 8px;">Click "Add Event" to get started</div>
+</div>
+`;
 return;
 }
 
 els.upcomingEvents.innerHTML = '';
 upcoming.forEach(event => {
 const eventDiv = document.createElement('div');
-eventDiv.style.cssText = 'padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer;';
+eventDiv.className = 'eventCard';
 eventDiv.onclick = () => editEvent(event.id);
 
 const eventDate = new Date(event.date + 'T' + event.time);
 const cls = event.classId ? getClassById(event.classId) : null;
 
+const typeIcons = {
+study: '📖',
+class: '🎓',
+meeting: '👥',
+other: '📌'
+};
+
 eventDiv.innerHTML = `
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-<div style="font-weight: 500;">${escapeHTML(event.title)}</div>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+<div style="font-weight: 600; font-size: 15px;">${typeIcons[event.type] || ''} ${escapeHTML(event.title)}</div>
 <span class="pill ${event.type}">${event.type}</span>
 </div>
 <div class="small">
-${eventDate.toLocaleDateString()} at ${event.time}
-${cls ? `• ${escapeHTML(cls.name)}` : ''}
-${event.duration ? `• ${event.duration} min` : ''}
+📅 ${eventDate.toLocaleDateString()} at ${event.time}
+${cls ? `• 📚 ${escapeHTML(cls.name)}` : ''}
+${event.duration ? `• ⏱️ ${event.duration} min` : ''}
 </div>
-${event.notes ? `<div class="small" style="margin-top: 4px;">${escapeHTML(event.notes)}</div>` : ''}
+${event.notes ? `<div class="small" style="margin-top: 8px; color: var(--text-secondary);">${escapeHTML(event.notes)}</div>` : ''}
 `;
 
 els.upcomingEvents.appendChild(eventDiv);
@@ -1241,9 +1520,7 @@ await document.documentElement.requestFullscreen();
 } else {
 await document.exitFullscreen();
 }
-} catch (_) {
-// Some browsers may block fullscreen without a direct user gesture; ignore.
-}
+} catch (_) {}
 }
 
 // Rendering
@@ -1267,9 +1544,15 @@ els.focusOpenBtn.disabled = true;
 // Classes table
 els.classTableBody.innerHTML = "";
 if (state.classes.length === 0) {
-const tr = document.createElement("tr");
-tr.innerHTML = `<td colspan="5" class="small" style="padding:16px; color: var(--muted);">No classes yet. Add one above!</td>`;
-els.classTableBody.appendChild(tr);
+els.classTableBody.innerHTML = `
+<tr>
+<td colspan="5" style="padding: 48px; text-align: center;">
+<div style="font-size: 48px; margin-bottom: 12px;">📚</div>
+<div style="color: var(--muted); font-size: 15px;">No classes yet</div>
+<div class="small" style="margin-top: 8px;">Add your first class above to get started</div>
+</td>
+</tr>
+`;
 } else {
 for (const c of state.classes) {
 const totals = totalsForClass(c.id);
@@ -1277,17 +1560,17 @@ const isActive = state.active?.classId === c.id;
 
 const tr = document.createElement("tr");
 tr.innerHTML = `
-<td><strong>${escapeHTML(c.name)}</strong></td>
+<td><strong style="font-size: 15px;">${escapeHTML(c.name)}</strong></td>
 <td class="right mono">${fmtTime(totals.today)}</td>
 <td class="right mono">${fmtTime(totals.week)}</td>
 <td class="right mono">${fmtTime(totals.all)}</td>
 <td class="right">
 <div class="actions">
 <button class="btn ${isActive ? "btnDanger" : "btnPrimary"}" data-action="toggle" data-id="${c.id}">
-${isActive ? "Stop" : "Start"}
+${isActive ? "⏹ Stop" : "▶ Start"}
 </button>
-<button class="btn" data-action="rename" data-id="${c.id}">Rename</button>
-<button class="btn btnDanger" data-action="delete" data-id="${c.id}">Delete</button>
+<button class="btn" data-action="rename" data-id="${c.id}">✏️ Rename</button>
+<button class="btn btnDanger" data-action="delete" data-id="${c.id}">🗑️ Delete</button>
 </div>
 </td>
 `;
@@ -1312,9 +1595,15 @@ const filterVal = els.filterClass.value;
 const sessions = filterVal ? state.sessions.filter(s => s.classId === filterVal) : state.sessions;
 
 if (sessions.length === 0) {
-const tr = document.createElement("tr");
-tr.innerHTML = `<td colspan="5" class="small" style="padding:16px; color: var(--muted);">No sessions yet.</td>`;
-els.historyBody.appendChild(tr);
+els.historyBody.innerHTML = `
+<tr>
+<td colspan="5" style="padding: 48px; text-align: center;">
+<div style="font-size: 48px; margin-bottom: 12px;">📝</div>
+<div style="color: var(--muted); font-size: 15px;">No study sessions yet</div>
+<div class="small" style="margin-top: 8px;">Start a timer to track your first session</div>
+</td>
+</tr>
+`;
 } else {
 for (const s of sessions) {
 const c = getClassById(s.classId);
@@ -1324,12 +1613,12 @@ const dur = msBetween(start, end);
 
 const tr = document.createElement("tr");
 tr.innerHTML = `
-<td>${escapeHTML(c ? c.name : "Unknown")}</td>
+<td><strong>${escapeHTML(c ? c.name : "Unknown")}</strong></td>
 <td class="small">${start.toLocaleString()}</td>
 <td class="small">${end.toLocaleString()}</td>
-<td class="right mono">${fmtHMS(dur)}</td>
+<td class="right mono" style="font-weight: 600;">${fmtHMS(dur)}</td>
 <td class="right">
-<button class="btn btnDanger" data-action="delete-session" data-id="${s.id}">Delete</button>
+<button class="btn btnDanger" data-action="delete-session" data-id="${s.id}">🗑️</button>
 </td>
 `;
 els.historyBody.appendChild(tr);
@@ -1369,7 +1658,7 @@ render();
 if (action === "rename") {
 const c = getClassById(id);
 if (!c) return;
-const newName = prompt("New name:", c.name);
+const newName = prompt("New class name:", c.name);
 const trimmed = (newName || "").trim();
 if (!trimmed) return;
 c.name = trimmed;
@@ -1380,7 +1669,7 @@ render();
 if (action === "delete") {
 const c = getClassById(id);
 if (!c) return;
-if (!confirm(`Delete "${c.name}" and all its sessions?`)) return;
+if (!confirm(`Delete "${c.name}" and all its sessions and events?`)) return;
 deleteClass(id);
 render();
 renderCalendar();
@@ -1423,11 +1712,12 @@ if (!Array.isArray(parsed.classes) || !Array.isArray(parsed.sessions)) throw new
 if (state.active) stopActiveTimer(new Date());
 state = { ...structuredClone(defaultState), ...parsed };
 if (!state.events) state.events = [];
+if (!state.theme) state.theme = 'dark';
 saveState();
 render();
 renderCalendar();
 renderUpcomingEvents();
-alert("Data imported successfully!");
+alert("Data imported successfully! ✅");
 } catch (err) {
 alert("Import failed: " + err.message);
 }
@@ -1435,8 +1725,10 @@ els.importFile.value = "";
 });
 
 els.resetBtn.addEventListener("click", () => {
-if (!confirm("Reset all data? This cannot be undone.")) return;
+if (!confirm("⚠️ Reset all data? This cannot be undone.")) return;
+const currentTheme = state.theme;
 state = structuredClone(defaultState);
+state.theme = currentTheme;
 saveState();
 render();
 renderCalendar();
@@ -1446,8 +1738,15 @@ renderUpcomingEvents();
 els.themeToggle.addEventListener("click", () => {
 const html = document.documentElement;
 const current = html.getAttribute("data-theme");
-html.setAttribute("data-theme", current === "light" ? "" : "light");
+const newTheme = current === "light" ? "" : "light";
+html.setAttribute("data-theme", newTheme);
+state.theme = newTheme === "light" ? "light" : "dark";
+els.themeIcon.textContent = newTheme === "light" ? "🌙" : "☀️";
+saveState();
 });
+
+// Set initial theme icon
+els.themeIcon.textContent = state.theme === "light" ? "🌙" : "☀️";
 
 // Focus mode controls
 els.focusOpenBtn.addEventListener("click", openFocusMode);
